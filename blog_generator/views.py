@@ -9,8 +9,7 @@ import json
 import os
 import assemblyai as aai
 import yt_dlp
-from transformers import pipeline, set_seed
-import torch
+import requests
 from .models import BlogPost
 
 # Create your views here.
@@ -95,98 +94,78 @@ def get_transcription(link):
     transcript = transcriber.transcribe(audio_file)
     return transcript.text
 
-generator = pipeline(
-    "text-generation", 
-    model="gpt2",
-    device=0 if torch.cuda.is_available() else -1
-    )
+
+HF_TOKEN = os.getenv("HF_TOKEN")  # Set this in Render Environment
+HF_MODEL = "gpt2"  # You can replace with another Hugging Face model if desired
+API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
+HEADERS = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+def call_hf_api(prompt, max_length=600):
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": max_length,
+            "temperature": 0.9,
+            "top_p": 0.95,
+            "top_k": 50,
+            "repetition_penalty": 1.15,
+            "no_repeat_ngram_size": 3,
+        },
+        "options": {"wait_for_model": True}
+    }
+    response = requests.post(API_URL, headers=HEADERS, json=payload)
+    data = response.json()
+    try:
+        return data[0]["generated_text"]
+    except Exception:
+        return "Error generating text"
+
 def generate_blog_from_transcription(transcription):
-    transcription = transcription[:3000]
+    transcription = transcription[:3000]  # Limit size
 
-    prompt = f"""
-        You are an expert technical blog writer.
-        Analyze the transcript below and determine the MAIN topic being discussed.
-        Then write a clear, well-structured educational blog article explaining that topic.
-        Requirements:
-        - Identify the central subject of the video.
-        - Explain the concepts clearly and professionally.
-        - Do NOT mention YouTube or the transcript.
-        - Expand on important ideas where necessary.
-        - Use clear Introduction, Body, and Conclusion sections.
-        - Avoid repetition.
-
-        Transcript:
-        {transcription}
-        Blog Article:
-        Introduction:
-        """
-
-    result = generator(
-        prompt,
-        max_length=600,
-        do_sample=True,
-        temperature=0.9,
-        top_p=0.95,
-        top_k=50,
-        repetition_penalty=1.15,
-        no_repeat_ngram_size=3,
-        num_return_sequences=1
-    )
-
-    blog_text = result[0]["generated_text"]
-    blog_text = blog_text.replace(prompt, "").strip()
-
-    return blog_text
-
-    #Limit transcript size
-    transcription = transcription[:3000]
-
-    #title
+    # Generate title
     title_prompt = f"""
-        You are a professional blog writer.
-        Create a compelling and creative blog title based on the following content.
-        Content:
-        {transcription}
-        Title:
-        """
-    title = generate_section(title_prompt, 80)
+    You are a professional blog writer.
+    Create a compelling blog title based on the following content:
+    {transcription}
+    Title:
+    """
+    title = call_hf_api(title_prompt, max_length=20).strip()
 
-    #introduction
+    # Generate introduction
     intro_prompt = f"""
-        Write an engaging introduction for a professional blog article.
-        Use storytelling and avoid repetition.
+    Write an engaging introduction for a professional blog article.
+    Use storytelling and avoid repetition.
+    Content:
+    {transcription}
+    Introduction:
+    """
+    introduction = call_hf_api(intro_prompt, max_length=150).strip()
 
-        Content:
-        {transcription}
-
-        Introduction:
-        """
-    introduction = generate_section(intro_prompt, 200)
-
-    #body
+    # Generate body
     body_prompt = f"""
-        Write the main body of a structured blog article. Use clear paragraphs and logical flow. Do not repeat phrases. Expand important ideas thoughtfully.
-        Content:
-        {transcription}
-        Main Body:
-        """
-    body = generate_section(body_prompt, 400)
+    Write the main body of a structured blog article.
+    Use clear paragraphs and logical flow.
+    Do not repeat phrases.
+    Expand important ideas thoughtfully.
+    Content:
+    {transcription}
+    Main Body:
+    """
+    body = call_hf_api(body_prompt, max_length=400).strip()
 
-    
+    # Generate conclusion
     conclusion_prompt = f"""
-        Write a strong and reflective conclusion for this blog article. Make it impactful and professional.
-        Content:{transcription}
-        Conclusion:
+    Write a strong and reflective conclusion for this blog article.
+    Content:
+    {transcription}
+    Conclusion:
     """
-    conclusion = generate_section(conclusion_prompt, 150)
+    conclusion = call_hf_api(conclusion_prompt, max_length=150).strip()
 
-    blog_article = f"""
-        {title}
-        {introduction}
-        {body}
-        {conclusion}
-    """
-    return blog_article.strip()
+    # Combine into full blog
+    blog_article = f"{title}\n\n{introduction}\n\n{body}\n\n{conclusion}"
+    return blog_article
 
 
 
