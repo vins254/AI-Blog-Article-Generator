@@ -18,7 +18,7 @@ from .models import BlogPost
 def index(request):
     return render(request, 'index.html')
 
-
+@login_required
 @csrf_exempt
 def generate_blog(request):
     if request.method == 'POST':
@@ -99,12 +99,12 @@ def get_transcription(link):
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 def call_openrouter(prompt):
-    url = "https://openrouter.ai/api/v1/chat/completions",
+    url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-    },
+    }
 
     data = {
         "model": "liquid/lfm-2.5-1.2b-thinking:free",  # free model
@@ -117,7 +117,20 @@ def call_openrouter(prompt):
     }
 
     response = requests.post(url, headers=headers, json=data)
+    
+    if response.status_code != 200:
+        print("OpenRouter Error:", response.text)
+        return None
+
     result = response.json()
+
+    if "choices" not in result:
+        print("Invalid response:", result)
+        return None
+    
+    return result["choices"][0]["message"]["content"]
+
+
 
     try:
         return result["choices"][0]["message"]["content"]
