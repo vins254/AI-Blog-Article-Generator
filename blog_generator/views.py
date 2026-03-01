@@ -95,77 +95,56 @@ def get_transcription(link):
     return transcript.text
 
 
-HF_TOKEN = os.getenv("HF_TOKEN")  # Set this in Render Environment
-HF_MODEL = "gpt2"  # You can replace with another Hugging Face model if desired
-API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
-HEADERS = {"Authorization": f"Bearer {HF_TOKEN}"}
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-def call_hf_api(prompt, max_length=600):
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": max_length,
-            "temperature": 0.9,
-            "top_p": 0.95,
-            "top_k": 50,
-            "repetition_penalty": 1.15,
-            "no_repeat_ngram_size": 3,
-        },
-        "options": {"wait_for_model": True}
+def call_openrouter(prompt):
+    url = "https://openrouter.ai/api/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
     }
-    response = requests.post(API_URL, headers=HEADERS, json=payload)
-    data = response.json()
+
+    data = {
+        "model": "mistralai/mistral-7b-instruct",  # free model
+        "messages": [
+            {"role": "system", "content": "You are a professional SEO blog writer."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.8,
+        "max_tokens": 1200
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    result = response.json()
+
     try:
-        return data[0]["generated_text"]
+        return result["choices"][0]["message"]["content"]
     except Exception:
-        return "Error generating text"
+        return None
+
 
 def generate_blog_from_transcription(transcription):
-    transcription = transcription[:3000]  # Limit size
+    transcription = transcription[:4000]
 
-    # Generate title
-    title_prompt = f"""
-    You are a professional blog writer.
-    Create a compelling blog title based on the following content:
+    prompt = f"""
+    Write a professional, SEO-optimized blog article based on the following transcript.
+
+    Requirements:
+    - Catchy blog title
+    - Engaging introduction
+    - Structured sections with subheadings
+    - Bullet points where appropriate
+    - Strong conclusion
+    - Meta description at the end
+
+    Transcript:
     {transcription}
-    Title:
     """
-    title = call_hf_api(title_prompt, max_length=20).strip()
 
-    # Generate introduction
-    intro_prompt = f"""
-    Write an engaging introduction for a professional blog article.
-    Use storytelling and avoid repetition.
-    Content:
-    {transcription}
-    Introduction:
-    """
-    introduction = call_hf_api(intro_prompt, max_length=150).strip()
+    return call_openrouter(prompt)
 
-    # Generate body
-    body_prompt = f"""
-    Write the main body of a structured blog article.
-    Use clear paragraphs and logical flow.
-    Do not repeat phrases.
-    Expand important ideas thoughtfully.
-    Content:
-    {transcription}
-    Main Body:
-    """
-    body = call_hf_api(body_prompt, max_length=400).strip()
 
-    # Generate conclusion
-    conclusion_prompt = f"""
-    Write a strong and reflective conclusion for this blog article.
-    Content:
-    {transcription}
-    Conclusion:
-    """
-    conclusion = call_hf_api(conclusion_prompt, max_length=150).strip()
-
-    # Combine into full blog
-    blog_article = f"{title}\n\n{introduction}\n\n{body}\n\n{conclusion}"
-    return blog_article
 
 
 
