@@ -12,6 +12,7 @@ import yt_dlp
 import requests
 from .models import BlogPost
 
+
 # Create your views here.
 @login_required
 def index(request):
@@ -98,15 +99,15 @@ def get_transcription(link):
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 def call_openrouter(prompt):
-    url = "https://openrouter.ai/api/v1/chat/completions"
+    url = "https://openrouter.ai/api/v1/chat/completions",
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-    }
+    },
 
     data = {
-        "model": "mistralai/mistral-7b-instruct",  # free model
+        "model": "liquid/lfm-2.5-1.2b-thinking:free",  # free model
         "messages": [
             {"role": "system", "content": "You are a professional SEO blog writer."},
             {"role": "user", "content": prompt}
