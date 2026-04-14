@@ -18,7 +18,7 @@ ContentFlow is a high-performance content engine designed to bridge the gap betw
 - 🎥 **Video-to-Article** — Batch process YouTube content into polished archives.
 - 📊 **Contextual Synthesis** — Intelligent extraction of key takeaways, subheadings, and meta-data.
 - 🔐 **Hardened Security** — Full CSRF protection, secure authentication, and user-isolated content archives.
-- 🎨 **SaaS Interface** — Professional, minimalist design focused on editorial clarity (Zero AI-bloat).
+- 🎨 **SaaS Interface** — Professional, minimalist design focused on editorial clarity.
 - 🧩 **Redundant AI Routing** — Automatically falls back to stable models (via OpenRouter) to ensure 24/7 service availability.
 
 ---
