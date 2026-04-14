@@ -62,7 +62,6 @@ ContentFlow is a high-performance content engine designed to bridge the gap betw
    ```env
    ASSEMBLYAI_API_KEY=your_key
    OPENROUTER_API_KEY=your_key
-   DEEPSEEK_API_KEY=optional_paid_key
    ```
 
 3. **Install & Initialize**
