@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- ── NAVIGATION ── -->
     <nav class="navbar">
         <a href="/" class="navbar-brand">
             <div class="brand-icon">CF</div>
@@ -22,19 +22,18 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- ── MAIN DASHBOARD ── -->
     <main class="main-content">
         <div class="card">
-            <!-- Hero Section -->
             <div class="hero-section">
                 <h1 class="hero-title">Video to Article Automation</h1>
                 <p class="hero-description">
                     Provide a YouTube link to process the video transcript 
-                    and generate a structured, professional article.
+                    and generate a structured, professional article in real-time.
                 </p>
             </div>
 
-            <!-- Input Section -->
+            <!-- YouTube URL Submission -->
             <div class="input-section">
                 <h3>Video Source</h3>
                 <div class="input-group" id="inputGroup">
@@ -45,13 +44,16 @@
                 </div>
             </div>
 
-            <!-- Loading -->
+            <!-- REAL-TIME PROGRESS FEEDBACK
+                 This section is hidden by default and activated via JavaScript
+                 when a generation request begins. -->
             <div id="loading-container" class="loading-container">
                 <div class="spinner"></div>
                 <span class="loading-text" id="loadingText">Connecting to source...</span>
             </div>
 
-            <!-- Output Section -->
+            <!-- ARTICLE OUTPUT
+                 Dynamic container that expands to show the AI-generated results. -->
             <div id="blogOutput" class="blog-output">
                 <div class="blog-output-header">
                     <div class="status-dot"></div>
@@ -62,15 +64,16 @@
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
         &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
     </footer>
 
-    <!-- Toast Container -->
+    <!-- Global Toast notification for errors/success messages -->
     <div id="toast" class="toast"></div>
 
+    <!-- ── CORE FRONTEND LOGIC ── -->
     <script>
+        // CSRF Utility: Fetches the security token required for Django POST requests
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -87,28 +90,10 @@
         }
         const csrftoken = getCookie('csrftoken');
         
-        // Human-focused loading messages
-        const loadingMessages = [
-            'Fetching video data...',
-            'Processing audio stream...',
-            'Extracting transcript segments...',
-            'Structuring content flow...',
-            'Finalizing article formatting...'
-        ];
-
-        let loadingInterval = null;
-
-        function showToast(message, type = 'error') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast toast-${type} show`;
-            setTimeout(() => toast.classList.remove('show'), 4000);
-        }
-
+        // UI Helper: Manages the loading spinner state
         function setLoading(active) {
             const container = document.getElementById('loading-container');
             const btn = document.getElementById('generateBlogButton');
-
             if (active) {
                 container.classList.add('active');
                 btn.disabled = true;
@@ -118,72 +103,66 @@
             }
         }
 
+        /**
+         * MAIN STREAMING HANDLER
+         * Instead of a traditional AJAX request, we use a ReadableStream
+         * to process JSON chunks from the server as they arrive.
+         */
         document.getElementById('generateBlogButton').addEventListener('click', async () => {
             const youtubeLink = document.getElementById('youtubeLink').value.trim();
             const blogContent = document.getElementById('blogContent');
             const blogOutput = document.getElementById('blogOutput');
             const loadingText = document.getElementById('loadingText');
 
-            if (!youtubeLink) {
-                showToast('Please provide a valid video link.');
-                return;
-            }
-
-            if (!youtubeLink.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/)) {
-                showToast('Invalid YouTube URL format.');
-                return;
-            }
+            if (!youtubeLink) return;
 
             setLoading(true);
             blogOutput.classList.remove('active');
             blogContent.innerHTML = '';
 
             try {
+                // Initiate the POST request to the streaming endpoint
                 const response = await fetch('/generate-blog', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                     body: JSON.stringify({ link: youtubeLink })
                 });
 
-                if (!response.ok) {
-                    showToast('Server communication failed.');
-                    setLoading(false);
-                    return;
-                }
+                if (!response.ok) throw new Error('Server error');
 
+                // Access the binary reader from the response body
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
 
+                // Processing loop: Reads chunks until the stream is closed
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
+                    // Data arrives as lines of JSON (NDJSON format)
                     buffer += decoder.decode(value, { stream: true });
                     const lines = buffer.split('\n');
-                    buffer = lines.pop(); // Keep partial line in buffer
+                    buffer = lines.pop(); // Keep partial line for next iteration
 
                     for (const line of lines) {
                         if (!line.trim()) continue;
                         try {
                             const data = JSON.parse(line);
                             
-                            if (data.error) {
-                                showToast(data.error);
-                                setLoading(false);
-                                return;
-                            }
+                            // 1. Error Handling
+                            if (data.error) throw new Error(data.error);
 
+                            // 2. Progress Updates
+                            // Updates the UI text based on the 'step' marker from the backend
                             if (data.msg) {
-                                loadingText.textContent = data.msg + '...';
-                                if (data.step) {
-                                    loadingText.textContent = `[${data.step}/4] ` + data.msg + '...';
-                                }
+                                loadingText.textContent = data.step 
+                                    ? `[${data.step}/4] ${data.msg}...` 
+                                    : `${data.msg}...`;
                             }
 
+                            // 3. Final Content Rendering
+                            // When step 5 (Complete) arrives, we parse the Markdown into HTML
                             if (data.step === 5 && data.content) {
                                 let html = data.content
                                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -193,28 +172,19 @@
                                     .replace(/^- (.*$)/gm, '<li>$1</li>')
                                     .replace(/\n\n/g, '</p><p>')
                                     .replace(/\n/g, '<br>');
-                                html = '<p>' + html + '</p>';
-
-                                blogContent.innerHTML = html;
+                                
+                                blogContent.innerHTML = '<p>' + html + '</p>';
                                 blogOutput.classList.add('active');
-                                showToast('Article processed successfully.', 'success');
                             }
                         } catch (e) {
-                            console.error("JSON parse error:", e, line);
+                            console.error("Stream parse error:", e);
                         }
                     }
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showToast('A processing error occurred.');
+                console.error('Pipeline Error:', error);
             }
             setLoading(false);
-        });
-
-        document.getElementById('youtubeLink').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('generateBlogButton').click();
-            }
         });
     </script>
 </body>
