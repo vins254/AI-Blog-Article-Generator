@@ -5,8 +5,6 @@
 
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django&logoColor=white)
-![Interface](https://img.shields.io/badge/Design-SaaS--Minimal-2563eb)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
