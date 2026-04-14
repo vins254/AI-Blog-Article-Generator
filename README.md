@@ -25,6 +25,26 @@ ContentFlow is a high-performance content engine designed to bridge the gap betw
 
 ---
 
+## 🖼️ Visual Tour
+
+### 1. Secure Access
+![Login Page](Screenshots/login_page.png)
+*Professional authentication interface styled with the ContentFlow SaaS theme.*
+
+### 2. Stream Dashboard
+![Dashboard](Screenshots/blog_generator_page.png)
+*The main workstation where users process video links and monitor the real-time synthesis pipeline.*
+
+### 3. Editorial Archive
+![Archive](Screenshots/blog_articles_archive.png)
+*A personal repository of processed articles, sorted by date for easy content management.*
+
+### 4. Article Preview
+![Article Preview](Screenshots/blog_article.png)
+*The final output featuring structured headings, bold key terms, and SEO-ready meta descriptions.*
+
+---
+
 ## 🛠️ Architecture
 
 | Layer | Technology |
