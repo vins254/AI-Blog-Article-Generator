@@ -4,45 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog Post Details</title>
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <title>{{ blog_article_detail.youtube_title }} — ContentFlow</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body class="bg-grat-100 font-sans antialiased">
-
+<body>
     <!-- Navbar -->
-    <nav class="bg-blue-600 p-4 text-white flex justify-between">
-        <div>
-            <a href="/" class="text-3xl font-bold">AI Blog Generator</a>
-        </div>
-        <div>
-            <a href="#" class="text-white hover:underline mx-4">Welcome {{ user.username }}</a>
-            <a href="/blog-list" class="text-white hover:underline mx-4">Saved Blog Posts</a>
-            <a href="logout" class="text-white hover:underline">Logout</a>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
+        </a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/blog-list" class="btn-nav btn-nav-outline">Archive</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
     <!-- Main Content -->
-     <div class="container mx-auto mt-10 px-4 sm:px-0">
-        <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-            
-            <section>
-                <h2 class="text-xl mb-4 font-semibold">Blog Post Details</h2>
-                <div class="border border-gray-300 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold">{{blog_article_detail.youtube_title}}</h3>
-                    <p class="text-gray-700">{{blog_article_detail.generated_content}}</p>
-                    <hr class="my-4 border-gray-300">
-                    <h4 class="text-lg font-semibold">Youtube Title</h4>
-                    <p class="text-gray-700">{{blog_article_detail.youtube_title}}</p>
-                    <h4 class="text-lg font-semibold mt-4">Youtube Link</h4>
-                    <a href="{{blog_article_detail.youtube_link}}" class="text-blue-600 hover:underline">{{blog_article_detail.youtube_link}}</a>
-                </div>
-            </section>
-        </div>
-     </div>
+    <main class="main-content">
+        <div class="card">
+            <!-- Header -->
+            <div class="blog-detail-header">
+                <a href="/blog-list" class="back-link">← Back to Archive</a>
+                <h1>{{ blog_article_detail.youtube_title }}</h1>
+            </div>
 
-     <footer class="text-center p-4 text-black mt-6">
-        Powered by <a href="https://github.com/vins254">vins254</a>
+            <!-- Meta -->
+            <div class="blog-detail-meta">
+                <div class="meta-item">
+                    <strong>Processed:</strong> {{ blog_article_detail.created_at|date:"F d, Y \a\t h:i A" }}
+                </div>
+                <div class="meta-item">
+                    <strong>Source:</strong> 
+                    <a href="{{ blog_article_detail.youtube_link }}" target="_blank" rel="noopener">
+                        YouTube Original ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Article Body -->
+            <div class="blog-detail-content">
+                {{ blog_article_detail.generated_content|linebreaksbr }}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
     </footer>
-    
 </body>
 </html>

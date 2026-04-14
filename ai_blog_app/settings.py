@@ -26,10 +26,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-1ez!e9&4+@k)r7$5+gm!a+q_jrg_ga6+&vzs3xi9+v_awuvg*7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 #ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['.onrender.com']
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -84,13 +84,25 @@ WSGI_APPLICATION = 'ai_blog_app.wsgi.application'
 #   }
 #}
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+# load_dotenv() removed - moved to bottom for clarity or handled by config()
+
+# Use SQLite locally; PostgreSQL (via DATABASE_URL) in production
+_database_url = os.environ.get('DATABASE_URL')
+if _database_url:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=_database_url,
+            conn_max_age=600,
+            ssl_require=False
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -140,6 +152,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = 'login'
 
-load_dotenv()
-ASSEMBLYAI_API_KEY = os.getenv("aai_api_key")
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+ASSEMBLYAI_API_KEY = config("ASSEMBLYAI_API_KEY", default=None)
+DEEPSEEK_API_KEY = config("DEEPSEEK_API_KEY", default=None)
+OPENROUTER_API_KEY = config("OPENROUTER_API_KEY", default=None)
+
 

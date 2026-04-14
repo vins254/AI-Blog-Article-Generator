@@ -1,145 +1,219 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Blog Generator</title>
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-
-    <style>
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @-webkit-keyframes rotate {
-            from {
-                -webkit-transform: rotate(0deg);
-            }
-            to {
-                -webkit-transform: rotate(360deg);
-            }
-        }
-
-        .load {
-            width: 100px;
-            height: 100px;
-            margin: 110px auto 0;
-            border: 10px solid #8822aa;
-            border-radius: 50%;
-            border-right-color: transparent;
-            border-bottom-color: transparent;
-            -webkit-transition: all 0.5s ease-in;
-            -webkit-animation-name: rotate;
-            -webkit-animation-duration: 1.0s;
-            -webkit-animation-iteration-count: infinite;
-            -webkit-animation-timing-function: linear;
-
-            transition: all 0.5s ease-in;
-            animation-name: rotate;
-            animation-duration: 1.0s;
-            animation-iteration-count: infinite;
-            animation-timing-function: linear;
-
-        }
-    </style>
-
+    <meta name="description" content="Automate your content workflow by converting YouTube videos into structured articles.">
+    <title>ContentFlow — Video Content Automation</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body class="flex flex-col min-h-screen bg-gray-100 font-sans antialiased">
+<body>
     <!-- Navbar -->
-    <nav class="bg-blue-600 p-4 text-white flex justify-between">
-        <div>
-            <a href="/" class="text-3xl font-bold">AI Blog Generator</a>
-        </div>
-        <div>
-            <a href="#" class="text-white hover:underline mx-4">Welcome {{ user.username }}</a>
-            <a href="/blog-list" class="text-white hover:underline mx-4">Saved Blog Posts</a>
-            <a href="logout" class="text-white hover:underline">Logout</a>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
+        </a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/blog-list" class="btn-nav btn-nav-outline">My Articles</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <br>
-    <br>
-
-    <!--Main-->
-    <div class="flex-grow container mx-auto mt-10 px-4 sm:px-0">
-        <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex flex-col">
-
-            <!---Introduction section-->
-            <div class="text-center">
-                <h2 class="text-2xl font-semibold mb-4">Welcome to the AI Blog Generator</h2>
-                <p class="text-gray-700">
-                    Generate high-quality blog articles from YouTube videos using artificial intelligence. 
-                    Simply enter the link to the YouTube video below and let the AI create the content for you! 
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <h1 class="hero-title">Video to Article Automation</h1>
+                <p class="hero-description">
+                    Provide a YouTube link to process the video transcript 
+                    and generate a structured, professional article.
                 </p>
             </div>
 
-            <br>
-
-            <!--Youtube section-->
-            <div>
-                <h2 class="text-xl mb-4 font-semibold">Enter Youtube Video Link</h2>
-                <div class="flex space-x-4">
-                    <input type="url" id="youtubeLink" placeholder="Paste Youtube Link..." class="flex-grow p-2 border border-blue-400 rounded-l-md">
-                    <button id="generateBlogButton" class="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 transition-colors">Generate</button>
+            <!-- Input Section -->
+            <div class="input-section">
+                <h3>Video Source</h3>
+                <div class="input-group" id="inputGroup">
+                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+                    <button id="generateBlogButton" class="btn btn-primary">
+                        Generate Article
+                    </button>
                 </div>
             </div>
 
+            <!-- Loading -->
+            <div id="loading-container" class="loading-container">
+                <div class="spinner"></div>
+                <span class="loading-text" id="loadingText">Connecting to source...</span>
+            </div>
 
-            <!--Section for loading circle-->
-            <div style="display: none;" id="loading-circle" class="load"></div>
-
-            <!--Generated Blog Display Section-->
-            <section class="mt-10 flex-grow">
-                <h2 class="text-xl mb-4 font-semibold"> Generated Blog Article</h2>
-                <div id="blogContent" class="mt-2 text-gray-700 space-y-4">
-                    
+            <!-- Output Section -->
+            <div id="blogOutput" class="blog-output">
+                <div class="blog-output-header">
+                    <div class="status-dot"></div>
+                    Processing Complete
                 </div>
-            </section>
+                <div id="blogContent" class="blog-content"></div>
+            </div>
         </div>
-    </div>
+    </main>
 
-    <footer class="text-center p-4 text-black mt-6">
-        Powered by <a href="https://github.com/vins254">vins254</a>
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
     </footer>
+
+    <!-- Toast Container -->
+    <div id="toast" class="toast"></div>
+
     <script>
-        document.getElementById('generateBlogButton').addEventListener('click', async () => {
-            
-            const youtubeLink = document.getElementById('youtubeLink').value;
-            const blogContent = document.getElementById('blogContent');
-
-            if (youtubeLink) {
-                document.getElementById('loading-circle').style.display = 'block';
-                blogContent.innerHTML = ''; //clear previous content
-
-                const endpointUrl = '/generate-blog';
-
-                try {
-                    const response = await fetch(endpointUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ link: youtubeLink })
-                    });
-
-                    const data = await response.json();
-
-                    blogContent.innerHTML = data.content;
-                    
-                } catch (error) {
-                    console.error("Error occurred:", error);
-                    alert("Something went wrong. Please try again later.");
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
-                document.getElementById('loading-circle').style.display = 'none';
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        
+        // Human-focused loading messages
+        const loadingMessages = [
+            'Fetching video data...',
+            'Processing audio stream...',
+            'Extracting transcript segments...',
+            'Structuring content flow...',
+            'Finalizing article formatting...'
+        ];
+
+        let loadingInterval = null;
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast toast-${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        function setLoading(active) {
+            const container = document.getElementById('loading-container');
+            const btn = document.getElementById('generateBlogButton');
+
+            if (active) {
+                container.classList.add('active');
+                btn.disabled = true;
             } else {
-                alert("Please enter a YouTube link.");
+                container.classList.remove('active');
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('generateBlogButton').addEventListener('click', async () => {
+            const youtubeLink = document.getElementById('youtubeLink').value.trim();
+            const blogContent = document.getElementById('blogContent');
+            const blogOutput = document.getElementById('blogOutput');
+            const loadingText = document.getElementById('loadingText');
+
+            if (!youtubeLink) {
+                showToast('Please provide a valid video link.');
+                return;
+            }
+
+            if (!youtubeLink.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/)) {
+                showToast('Invalid YouTube URL format.');
+                return;
+            }
+
+            setLoading(true);
+            blogOutput.classList.remove('active');
+            blogContent.innerHTML = '';
+
+            try {
+                const response = await fetch('/generate-blog', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({ link: youtubeLink })
+                });
+
+                if (!response.ok) {
+                    showToast('Server communication failed.');
+                    setLoading(false);
+                    return;
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // Keep partial line in buffer
+
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const data = JSON.parse(line);
+                            
+                            if (data.error) {
+                                showToast(data.error);
+                                setLoading(false);
+                                return;
+                            }
+
+                            if (data.msg) {
+                                loadingText.textContent = data.msg + '...';
+                                if (data.step) {
+                                    loadingText.textContent = `[${data.step}/4] ` + data.msg + '...';
+                                }
+                            }
+
+                            if (data.step === 5 && data.content) {
+                                let html = data.content
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                                    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                                    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                                    .replace(/^- (.*$)/gm, '<li>$1</li>')
+                                    .replace(/\n\n/g, '</p><p>')
+                                    .replace(/\n/g, '<br>');
+                                html = '<p>' + html + '</p>';
+
+                                blogContent.innerHTML = html;
+                                blogOutput.classList.add('active');
+                                showToast('Article processed successfully.', 'success');
+                            }
+                        } catch (e) {
+                            console.error("JSON parse error:", e, line);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('A processing error occurred.');
+            }
+            setLoading(false);
+        });
+
+        document.getElementById('youtubeLink').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('generateBlogButton').click();
             }
         });
     </script>

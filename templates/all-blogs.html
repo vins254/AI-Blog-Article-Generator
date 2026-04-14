@@ -1,54 +1,58 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Blog Posts</title>
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <title>My Articles — ContentFlow</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body>
     <!-- Navbar -->
-    <nav class="bg-blue-600 p-4 text-white flex justify-between">
-        <div>
-            <a href="/" class="text-3xl font-bold">AI Blog Generator</a>
-            <!--<h1 class="text-3xl font-bold">AI Blog Generator</h1>-->
-        </div>
-        <div>
-            <a href="#" class="text-white hover:underline mx-4">Welcome {{ user.username }}</a>
-            <a href="/blog-list" class="text-white hover:underline mx-4">Saved Blog Posts</a>
-            <a href="logout" class="text-white hover:underline">Logout</a>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
+        </a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/" class="btn-nav btn-nav-outline">New Article</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <!-- Main Content Container -->
-     <div class="container mx-auto mt-10 px-4 sm:px-0">
-        <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <div class="blog-list-header">
+                <h2>Article Archive</h2>
+                <span class="blog-count">{{ blog_articles|length }} record{{ blog_articles|length|pluralize }}</span>
+            </div>
 
-            <!--- Blog posts section -->
-            <section>
-                <h2 class="text-xl mb-4 font-semibold">All Blog Posts</h2>
-                <div class="space-y-4">
-
-                    {% for article in blog_articles reversed %}
-                    <a href="blog-details/{{article.id}}">
-                        <div class="border border-gray-300 p-4 rounded-lg">
-                            <h3 class="text-lg font-semibold">{{article.youtube_title}}</h3>
-                            <p>{{article.generated_content|truncatechars:80}}</p>
-                        </div>
-                    </a>
-                    {% endfor %}
-                    <!----Repeat -->
+            <div>
+                {% for article in blog_articles reversed %}
+                <a href="/blog-details/{{ article.id }}/" class="blog-item">
+                    <div class="blog-item-title">{{ article.youtube_title }}</div>
+                    <div class="blog-item-preview">{{ article.generated_content|truncatechars:120 }}</div>
+                    <div class="blog-item-meta">
+                        <span class="meta-tag">Processed</span>
+                        <span>{{ article.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="empty-state">
+                    <h3>No records found</h3>
+                    <p>Process your first video link to generate an article.</p>
+                    <a href="/" class="btn btn-primary">Process New Content</a>
                 </div>
-            </section>
-
+                {% endfor %}
+            </div>
         </div>
-     </div>
+    </main>
 
-     
-     <footer class="text-center p-4 text-black mt-6">
-        Powered by <a href="https://github.com/vins254">vins254</a>
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
     </footer>
 </body>
 </html>
