@@ -1,1 +1,26 @@
+# ── Environment & Secrets ──
 .env
+*.env
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+
+# ── Django ──
+db.sqlite3
+server/media/
+server/staticfiles/
+
+# ── Virtual Environment ──
+venv/
+env/
+.venv/
+
+# ── Node ──
+node_modules/
+
+# ── OS ──
+.DS_Store
+Thumbs.db

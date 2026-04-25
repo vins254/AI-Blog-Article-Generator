@@ -80,9 +80,41 @@ ROOT_DIR = BASE_DIR.parent
 
 
 # ── SECURITY ──
-SECRET_KEY = 'django-insecure-1ez!e9&4+@k)r7$5+gm!a+q_jrg_ga6+&vzs3xi9+v_awuvg*7'
-DEBUG = True # Set to False in production!
-ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+# In production, these MUST be set as environment variables in the Render dashboard.
+# Never hard-code a real SECRET_KEY or leave DEBUG=True in production.
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+# ALLOWED_HOSTS: Accepts the Render domain automatically.
+# The RENDER_EXTERNAL_HOSTNAME env var is injected by Render at build time.
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+RENDER_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_HOSTNAME)
+
+# CSRF_TRUSTED_ORIGINS: Required for secure POST requests from the Render domain.
+# Without this, all form submissions and AJAX calls will be rejected in production.
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+]
+if RENDER_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_HOSTNAME}')
+
+# PRODUCTION SECURITY HEADERS
+# These settings are intentionally OFF in development (DEBUG=True) to keep
+# local dev easy. They activate automatically when DEBUG=False on Render.
+if not DEBUG:
+    # Force all traffic through HTTPS
+    SECURE_SSL_REDIRECT = True
+    # Protect cookies from being sent over HTTP
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Tell browsers to only talk to this site over HTTPS for 1 year
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # Prevent the browser from guessing content types (security best practice)
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
 # ── INSTALLED MODULES ──
@@ -128,17 +160,21 @@ WSGI_APPLICATION = 'ai_blog_app.wsgi.application'
 
 
 # ── DATABASE CONFIGURATION ──
-# Uses SQLite for local development and PostgreSQL for production deployments.
+# Supabase provides a PostgreSQL connection string (postgres://...).
+# Set DATABASE_URL in the Render environment variables dashboard.
+# Locally, falls back to SQLite so no setup is needed for development.
 _database_url = os.environ.get('DATABASE_URL')
 if _database_url:
     DATABASES = {
         'default': dj_database_url.config(
             default=_database_url,
             conn_max_age=600,
-            ssl_require=False
+            # Supabase requires SSL — this enforces the encrypted connection.
+            ssl_require=True
         )
     }
 else:
+    # Local development: SQLite requires no configuration at all.
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
