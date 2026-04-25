@@ -171,11 +171,13 @@ if _database_url:
     if '?' in _database_url:
         _database_url = _database_url.split('?')[0]
 
+    # IMPORTANT: We use dj_database_url.parse() instead of .config() here.
+    # .config() reads DATABASE_URL directly from os.environ (ignoring our
+    # cleaned variable). .parse() takes our cleaned string directly.
     DATABASES = {
-        'default': dj_database_url.config(
-            default=_database_url,
+        'default': dj_database_url.parse(
+            _database_url,
             conn_max_age=600,
-            # Supabase requires SSL — this enforces the encrypted connection.
             ssl_require=True
         )
     }
