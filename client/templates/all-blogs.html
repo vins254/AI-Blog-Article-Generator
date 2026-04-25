@@ -1,4 +1,4 @@
-{#
+{% comment %}
   =============================================================================
   FILE: client/templates/all-blogs.html
   PURPOSE: The "Article Archive" page — shows every article the logged-in
@@ -26,7 +26,7 @@
   - `{% load static %}`: Enables the {% static %} tag so we can reference
     the CSS file from client/static/ correctly regardless of deployment environment.
   =============================================================================
-#}
+{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
