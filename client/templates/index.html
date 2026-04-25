@@ -44,8 +44,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Automate your content workflow by converting YouTube videos into structured articles.">
-    <title>ContentFlow — Video Content Automation</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="{% static 'js/theme-controller.js' %}"></script>
 </head>
 <body>
     <!-- ── NAVIGATION ── -->
@@ -55,6 +55,7 @@
             ContentFlow
         </a>
         <div class="navbar-links">
+            <button id="themeToggle" class="theme-toggle">Mode</button>
             <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
             <a href="/blog-list" class="btn-nav btn-nav-outline">My Articles</a>
             <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
@@ -151,11 +152,7 @@
             }
         }
 
-        /**
-         * PERSISTENCE: HYDRATION ON LOAD
-         * When the user reloads the page, we want to restore their previous session data 
-         * so they don't lose their work. We pull this from the browser's localStorage.
-         */
+        // Initialize dashboard state on load
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem('cf_last_url');
             const savedContent = localStorage.getItem('cf_last_content');
