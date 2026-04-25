@@ -1,34 +1,3 @@
-{% comment %}
-  =============================================================================
-  FILE: client/templates/login.html
-  PURPOSE: The user login / authentication page. This is the gateway to the
-           application — unauthenticated users are redirected here automatically
-           by Django's @login_required decorator on all protected views.
-  =============================================================================
-
-  HOW IT WORKS:
-  - This template renders a simple HTML form with two fields: username & password.
-  - When the form is submitted (POST), Django's built-in authenticate() function
-    checks the credentials against the hashed passwords stored in the database.
-  - If authentication succeeds, the user is logged in via login() and redirected
-    to the main dashboard (/).
-  - If it fails, the view sends back an 'error_message' variable which this
-    template conditionally displays using the {% if error_message %} block.
-  - If the user is already logged in, the view skips all of this and redirects
-    them straight to the dashboard so they don't see the login page unnecessarily.
-
-  FEATURES & TOOLS:
-  - Django Template Language (DTL): {% if error_message %} for conditional
-    rendering of server-side error feedback without any JavaScript.
-  - {% csrf_token %}: Injects a hidden security token into the form. Django
-    will reject any POST request that doesn't include this token, protecting
-    against Cross-Site Request Forgery (CSRF) attacks.
-  - autocomplete attributes: Set to 'username' and 'current-password' to
-    tell the browser's password manager how to auto-fill fields correctly.
-  - {% load static %}: Allows us to load the shared styles.css from the
-    client/static/css/ directory using Django's static file resolver.
-  =============================================================================
-{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -38,48 +7,51 @@
     <title>Login — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header">
-                <div class="auth-icon" style="color: white; font-weight: bold;">CF</div>
-                <h2>Login</h2>
-                <p>Welcome back to ContentFlow</p>
-            </div>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px;">
 
-            {% if error_message %}
-            <div class="form-error">
-                {{ error_message }}
+    <div class="auth-box">
+        <header style="text-align: center; margin-bottom: 2.5rem;">
+            <div class="brand" style="justify-content: center; margin-bottom: 1rem;">
+                ContentFlow <span class="brand-badge">App</span>
             </div>
-            {% endif %}
+            <h2 style="font-weight: 800; font-size: 1.5rem;">Sign in</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Access your editorial dashboard.</p>
+        </header>
 
-            {% if form.errors %}
-            <div class="form-error">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <form method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" class="form-input" placeholder="e.g. john_doe" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-input" placeholder="********" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn btn-primary btn-full">Sign In</button>
-            </form>
-
-            <div class="auth-footer">
-                Don't have an account? <a href="/signup">Sign Up</a>
-            </div>
+        {% if error_message %}
+        <div style="background: rgba(248, 81, 73, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem;">
+            {{ error_message }}
         </div>
+        {% endif %}
+
+        {% if form.errors %}
+        <div style="background: rgba(248, 81, 73, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem;">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary);">Username</label>
+                <input type="text" name="username" class="form-input" required autocomplete="username">
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary);">Password</label>
+                <input type="password" name="password" class="form-input" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="action-btn" style="width: 100%; padding: 0.75rem;">Continue</button>
+        </form>
+
+        <footer style="margin-top: 2rem; text-align: center; font-size: 0.85rem;">
+            <span style="color: var(--text-secondary);">Don't have an account?</span>
+            <a href="/signup" style="color: var(--accent); text-decoration: none; font-weight: 700; margin-left: 4px;">Sign up</a>
+        </footer>
     </div>
+
 </body>
 </html>
