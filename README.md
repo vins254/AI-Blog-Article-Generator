@@ -14,110 +14,96 @@ ContentFlow is a high-performance content engine designed to bridge the gap betw
 
 ### ✨ Key Features
 
-- 🔄 **Real-Time Streaming Pipeline** — Watch the entire process (Download → Transcribe → Synthesize) live in the UI and terminal.
+- 🔄 **Real-Time Streaming Pipeline** — Watch the entire process (Download → Transcribe → Synthesize) live in the UI.
+- 📂 **Clean Architecture** — Separated `client/` (Frontend) and `server/` (Backend) structure for better scalability.
 - 🎥 **Video-to-Article** — Batch process YouTube content into polished archives.
-- 📊 **Contextual Synthesis** — Intelligent extraction of key takeaways, subheadings, and meta-data.
+- 💾 **State Persistence** — Supports page reloads without losing your current input or generated results.
 - 🔐 **Hardened Security** — Full CSRF protection, secure authentication, and user-isolated content archives.
 - 🎨 **SaaS Interface** — Professional, minimalist design focused on editorial clarity.
-- 🧩 **Redundant AI Routing** — Automatically falls back to stable models (via OpenRouter) to ensure 24/7 service availability.
+- 🧩 **Redundant AI Routing** — Automatically falls back to stable models (via OpenRouter).
 
 ---
 
-## 🖼️ Visual Tour
+## 🏗️ Project Structure
 
-### 1. Secure Access
-![Login Page](Screenshots/login_page.png)
-*Professional authentication interface styled with the ContentFlow SaaS theme.*
+The project follows a decoupled structure to ensure it is **scalable** and easy to maintain:
 
-### 2. Stream Dashboard
-![Dashboard](Screenshots/blog_generator_page.png)
-*The main workstation where users process video links and monitor the real-time synthesis pipeline.*
-
-### 3. Editorial Archive
-![Archive](Screenshots/blog_articles_archive.png)
-*A personal repository of processed articles, sorted by date for easy content management.*
-
-### 4. Article Preview
-![Article Preview](Screenshots/blog_article.png)
-*The final output featuring structured headings, bold key terms, and SEO-ready meta descriptions.*
+```text
+AI_blog_app/
+├── client/              # Frontend Assets
+│   ├── static/          # CSS, JS, and global assets
+│   └── templates/       # Django HTML templates
+└── server/              # Backend Logic (Django)
+    ├── ai_blog_app/     # Core project settings
+    ├── blog_generator/  # Application logic & AI pipeline
+    ├── media/           # Local storage for audio extractions
+    ├── manage.py        # Project entry point
+    └── .env             # Sensitive API keys (Secrets)
+```
 
 ---
 
-## 🛠️ Architecture
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-----------|-----------|
-| **Framework** | Django 6.0 (Python) |
-| **Logic Engine** | OpenRouter Auto-Router (Free Tier Fallback) |
-| **Transcription** | AssemblyAI (Universal Model) |
+| **Backend** | Django 6.0 (Python) |
+| **Frontend** | Vanilla JavaScript + HTML5 (State Persistence via LocalStorage) |
+| **Logic Engine** | OpenRouter AI (Multi-model Auto-Router) |
+| **Transcription** | AssemblyAI (Neural Speech-to-Text) |
 | **Extraction** | yt-dlp + FFmpeg |
-| **Streaming** | Server-Sent Progress Events (Real-time updates) |
-| **UI Design** | Professional SaaS Design System |
+| **Security** | Django CSRF & Session Auth + Dotenv configuration |
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Installation & Setup
 
 ### Prerequisites
 
 - **Python 3.12+**
-- **FFmpeg** — Crucial for audio processing
+- **FFmpeg** — Required for audio stream processing
 - **API Keys:**
-  - [AssemblyAI](https://www.assemblyai.com/) — High-fidelity transcription
-  - [OpenRouter](https://openrouter.ai/) — LLM Synthesis back-end
+  - [AssemblyAI](https://www.assemblyai.com/)
+  - [OpenRouter](https://openrouter.ai/)
 
 ### Quick Start
 
-1. **Clone & Env**
+1. **Clone the Repository**
    ```bash
    git clone https://github.com/vins254/AI-Blog-Article-Generator.git
    cd AI-Blog-Article-Generator
    ```
 
-2. **Environment Configuration**
-   
-   Create a `.env` file (UTF-8, no BOM):
-   ```env
-   ASSEMBLYAI_API_KEY=your_key
-   OPENROUTER_API_KEY=your_key
+2. **Setup the Server**
+   ```bash
+   cd server
+   pip install -r requirements.txt
    ```
 
-3. **Install & Initialize**
+3. **Configure Environment Variables**
+   
+   Create a `.env` file in the `server/` directory:
+   ```env
+   ASSEMBLYAI_API_KEY=your_assemblyai_key
+   OPENROUTER_API_KEY=your_openrouter_key
+   ```
+
+4. **Initialize Database & Start**
    ```bash
-   pip install -r requirements.txt
    python manage.py migrate
    python manage.py runserver
    ```
 
----
-
-## 🔄 The Protocol
-
-ContentFlow uses a streaming architecture to provide instant feedback:
-
-```mermaid
-graph LR
-    A[Input URL] --> B[Stream Extraction]
-    B --> C[Transcription]
-    C --> D[AI Synthesis]
-    D --> E[Archive Record]
-    B -.-> F[UI Progress]
-    C -.-> F
-    D -.-> F
-```
-
-1. **Extraction**: Audio data is isolated from the video stream.
-2. **Transcription**: Speech-to-text conversion via premium neural models.
-3. **Synthesis**: Text is restructured into a professional editorial format.
-4. **Persistence**: The record is archived to your private database.
+5. **Access the App**
+   Open your browser and navigate to `http://127.0.0.1:8000`.
 
 ---
 
-## 🔐 Design Philosophy
+## 🔐 Security & Scalability
 
-- **Professionalism**: Solid backgrounds and crisp borders. No "magical" neons or glassmorphism.
-- **Transparency**: Every step of the backend process is visible in the UI loader.
-- **Reliability**: Multi-model fallback logic ensures the app never hits a "404" or "Insufficient Balance" wall.
+- **Security**: All API keys are decoupled from the codebase using `.env` files. Authentication is handled by Django's battle-tested auth system, and all stateful requests require CSRF tokens.
+- **Scalability**: The `client/server` split allows you to easily replace the frontend with a modern framework (like React or Next.js) in the future without touching the core AI pipeline.
+- **Persistence**: We use `localStorage` to bridge the gap between page reloads, ensuring the "Article Generator" feels like a robust desktop application.
 
 ---
 

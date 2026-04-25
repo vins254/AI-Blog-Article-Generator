@@ -1,3 +1,42 @@
+{#
+  =============================================================================
+  FILE: client/templates/index.html
+  PURPOSE: The main application dashboard — the page where users paste a
+           YouTube URL and trigger the full AI article generation pipeline.
+           This is the most complex template in the project.
+  =============================================================================
+
+  HOW IT WORKS:
+  1. The user pastes a YouTube URL into the input field and clicks "Generate Article".
+  2. A JavaScript fetch() POST request is sent to the /generate-blog endpoint
+     with the URL and the Django CSRF token in the headers.
+  3. The Django backend returns a Streaming HTTP Response using NDJSON format
+     (Newline Delimited JSON — one JSON object per line).
+  4. The JavaScript reads the stream chunk by chunk using a ReadableStream reader,
+     updating the progress bar text for each step (1/4, 2/4, 3/4, 4/4).
+  5. When the final step (step 5) arrives, the full article Markdown is converted
+     to HTML using a lightweight regex parser and injected into the page.
+  6. Both the URL and the final article are saved to localStorage so the user's
+     work is restored automatically if they refresh the page.
+
+  FEATURES & TOOLS:
+  - Fetch API + ReadableStream: Enables real-time server-sent data without
+    using WebSockets or SSE. We read the response body incrementally.
+  - NDJSON Streaming: The backend yields one JSON line per stage, and we
+    parse each line as it arrives to update the UI progressively.
+  - CSRF Security: The getCookie() function reads Django's csrftoken from
+    the browser cookie and sends it in the X-CSRFToken request header.
+  - LocalStorage Persistence: URL input is saved on every keystroke
+    (cf_last_url). Generated HTML article is saved after step 5 completes
+    (cf_last_content). Both are restored on DOMContentLoaded, so a page
+    reload brings the user back to exactly where they were.
+  - Lightweight Markdown-to-HTML Parser: A chain of .replace() regex calls
+    converts **bold**, # headings, and - lists from the AI output into
+    real HTML tags before injecting into the DOM.
+  - {% load static %} / {% static %}: Resolves the CSS path correctly
+    in both local development and production environments.
+  =============================================================================
+#}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -73,7 +112,12 @@
 
     <!-- ── CORE FRONTEND LOGIC ── -->
     <script>
-        // CSRF Utility: Fetches the security token required for Django POST requests
+        /**
+         * SECURITY: CSRF UTILITY
+         * Django requires a CSRF token for all non-GET requests to prevent 
+         * Cross-Site Request Forgery. This function parses the document cookies 
+         * to find the 'csrftoken' value.
+         */
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -90,7 +134,11 @@
         }
         const csrftoken = getCookie('csrftoken');
         
-        // UI Helper: Manages the loading spinner state
+        /**
+         * UI STATE MANAGEMENT
+         * Manages the visibility of the loading spinner and disables the button 
+         * to prevent duplicate submissions while a request is in flight.
+         */
         function setLoading(active) {
             const container = document.getElementById('loading-container');
             const btn = document.getElementById('generateBlogButton');
@@ -104,9 +152,36 @@
         }
 
         /**
-         * MAIN STREAMING HANDLER
-         * Instead of a traditional AJAX request, we use a ReadableStream
-         * to process JSON chunks from the server as they arrive.
+         * PERSISTENCE: HYDRATION ON LOAD
+         * When the user reloads the page, we want to restore their previous session data 
+         * so they don't lose their work. We pull this from the browser's localStorage.
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('cf_last_url');
+            const savedContent = localStorage.getItem('cf_last_content');
+            
+            if (savedUrl) {
+                document.getElementById('youtubeLink').value = savedUrl;
+            }
+            
+            if (savedContent) {
+                const blogContent = document.getElementById('blogContent');
+                const blogOutput = document.getElementById('blogOutput');
+                blogContent.innerHTML = savedContent;
+                blogOutput.classList.add('active');
+            }
+        });
+
+        // Track input changes to save the URL in real-time
+        document.getElementById('youtubeLink').addEventListener('input', (e) => {
+            localStorage.setItem('cf_last_url', e.target.value.trim());
+        });
+
+        /**
+         * MAIN GENERATION PIPELINE
+         * This uses the Fetch API with ReadableStream to handle the NDJSON 
+         * (Newline Delimited JSON) stream from the Django backend. This allows us 
+         * to update the UI step-by-step as the AI processes the video.
          */
         document.getElementById('generateBlogButton').addEventListener('click', async () => {
             const youtubeLink = document.getElementById('youtubeLink').value.trim();
@@ -116,12 +191,15 @@
 
             if (!youtubeLink) return;
 
+            // Prepare UI for new generation
             setLoading(true);
             blogOutput.classList.remove('active');
             blogContent.innerHTML = '';
+            localStorage.removeItem('cf_last_content'); // Clear old content
 
             try {
-                // Initiate the POST request to the streaming endpoint
+                // We send a POST request with the YouTube URL.
+                // Notice the 'X-CSRFToken' header which is required by Django security.
                 const response = await fetch('/generate-blog', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
@@ -130,40 +208,42 @@
 
                 if (!response.ok) throw new Error('Server error');
 
-                // Access the binary reader from the response body
+                // The 'body' of the response is a stream we can read chunk-by-chunk.
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
 
-                // Processing loop: Reads chunks until the stream is closed
+                // Keep reading until the stream is 'done'.
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    // Data arrives as lines of JSON (NDJSON format)
+                    // Decode binary data to string and append to our buffer.
                     buffer += decoder.decode(value, { stream: true });
+                    
+                    // Split by newlines as the server sends one JSON object per line.
                     const lines = buffer.split('\n');
-                    buffer = lines.pop(); // Keep partial line for next iteration
+                    buffer = lines.pop(); // The last element might be an incomplete JSON string.
 
                     for (const line of lines) {
                         if (!line.trim()) continue;
                         try {
                             const data = JSON.parse(line);
                             
-                            // 1. Error Handling
+                            // 1. Error check from backend
                             if (data.error) throw new Error(data.error);
 
-                            // 2. Progress Updates
-                            // Updates the UI text based on the 'step' marker from the backend
+                            // 2. Step-by-step progress feedback (Metadata -> Audio -> Transcription -> AI Synthesis)
                             if (data.msg) {
                                 loadingText.textContent = data.step 
                                     ? `[${data.step}/4] ${data.msg}...` 
                                     : `${data.msg}...`;
                             }
 
-                            // 3. Final Content Rendering
-                            // When step 5 (Complete) arrives, we parse the Markdown into HTML
+                            // 3. Final Content rendering
+                            // When step 5 is reached, we have the full article.
                             if (data.step === 5 && data.content) {
+                                // A basic Markdown-to-HTML parser for the generated content.
                                 let html = data.content
                                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                                     .replace(/^### (.*$)/gm, '<h3>$1</h3>')
@@ -173,8 +253,12 @@
                                     .replace(/\n\n/g, '</p><p>')
                                     .replace(/\n/g, '<br>');
                                 
-                                blogContent.innerHTML = '<p>' + html + '</p>';
+                                const finalHtml = '<p>' + html + '</p>';
+                                blogContent.innerHTML = finalHtml;
                                 blogOutput.classList.add('active');
+                                
+                                // PERSISTENCE: Save the final article so it's there after a refresh!
+                                localStorage.setItem('cf_last_content', finalHtml);
                             }
                         } catch (e) {
                             console.error("Stream parse error:", e);
@@ -183,6 +267,7 @@
                 }
             } catch (error) {
                 console.error('Pipeline Error:', error);
+                alert('An error occurred during article generation. Please check the URL and try again.');
             }
             setLoading(false);
         });

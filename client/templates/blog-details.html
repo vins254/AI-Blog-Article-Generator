@@ -1,3 +1,32 @@
+{#
+  =============================================================================
+  FILE: client/templates/blog-details.html
+  PURPOSE: The full-article reader page. Displays the complete AI-generated
+           content for one specific BlogPost record, along with metadata like
+           the processing date and a link back to the original YouTube video.
+  =============================================================================
+
+  HOW IT WORKS:
+  - The URL pattern /blog-details/<pk>/ captures the article's numeric ID.
+  - The view (blog_details in views.py) uses that ID to fetch the correct
+    BlogPost row from the database. Crucially, it also filters by the
+    logged-in user so one user can NEVER read another user's articles.
+  - The full article content is passed to this template as 'blog_article_detail'.
+
+  FEATURES & TOOLS:
+  - Django Template Language (DTL): {{ variable }} rendering for title, content,
+    dates, and source links.
+  - `|date:"F d, Y \a\t h:i A"` filter: Renders a precise, formatted timestamp
+    like "April 25, 2026 at 02:30 PM".
+  - `|linebreaksbr` filter: Converts raw newline characters in the stored article
+    text into proper HTML <br> tags so formatting is preserved visually.
+  - Security: Protected by @login_required + object-level ownership check
+    (get(id=pk, user=request.user)) in views.py, so direct URL manipulation
+    by other users returns a 404 or redirect.
+  - Dynamic <title> tag: The browser tab title updates to the article's own
+    name for better UX and bookmarking.
+  =============================================================================
+#}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">

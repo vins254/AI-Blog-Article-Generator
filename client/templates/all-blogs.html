@@ -1,3 +1,32 @@
+{#
+  =============================================================================
+  FILE: client/templates/all-blogs.html
+  PURPOSE: The "Article Archive" page — shows every article the logged-in
+           user has ever generated, listed from newest to oldest.
+  =============================================================================
+
+  HOW IT WORKS:
+  - Django's view (blog_list in views.py) queries the BlogPost model and passes
+    a list called 'blog_articles' into this template.
+  - We loop over that list using Django's {% for %} tag to build the card grid.
+  - The {% empty %} tag handles the edge case where the user has no articles yet,
+    giving them a friendly prompt to go create their first one.
+
+  FEATURES & TOOLS:
+  - Django Template Language (DTL): {% for %}, {% empty %}, {% endfor %},
+    {{ variable }} syntax for server-side HTML rendering.
+  - `|truncatechars:120` filter: Automatically shortens the article preview
+    text to 120 characters so the list stays clean and scannable.
+  - `|length` and `|pluralize` filters: Dynamically display "1 record" vs
+    "3 records" without any extra Python code.
+  - `|date:"M d, Y"` filter: Formats the stored UTC timestamp into a
+    human-friendly string like "Apr 25, 2026".
+  - Security: This page is protected by the @login_required decorator in
+    views.py. Unauthenticated users are redirected to /login automatically.
+  - `{% load static %}`: Enables the {% static %} tag so we can reference
+    the CSS file from client/static/ correctly regardless of deployment environment.
+  =============================================================================
+#}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">

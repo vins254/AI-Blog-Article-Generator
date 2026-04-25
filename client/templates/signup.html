@@ -1,3 +1,34 @@
+{#
+  =============================================================================
+  FILE: client/templates/signup.html
+  PURPOSE: New user registration page. Allows visitors to create a ContentFlow
+           account. After successful signup, the user is immediately logged in
+           and redirected to the main dashboard without an extra step.
+  =============================================================================
+
+  HOW IT WORKS:
+  - Renders a form with four fields: username, email, password, confirm password.
+  - On POST submission, the view (user_signup in views.py) runs full server-side
+    validation: checks for empty fields, username format, password match, username
+    uniqueness, and Django's built-in password strength policies.
+  - If any check fails, the specific error message is passed back and shown inline.
+  - On success, User.objects.create_user() is called (which automatically hashes
+    the password using PBKDF2 — never stored as plain text).
+
+  FEATURES & TOOLS:
+  - Live Password Strength Indicator: A small <script> block at the bottom of
+    this file listens to each keystroke on the password field. It awards "strength
+    points" for length (>= 8 chars), uppercase letters, digits, and special chars.
+    The CSS class on the strength bar (weak / medium / strong) is swapped in
+    real time to give the user instant visual feedback.
+  - {% csrf_token %}: Required security token for POST form submission.
+  - Django Template Language (DTL): {% if error_message %} block shows
+    validation errors returned from the server without a full page reload.
+  - autocomplete="new-password": Tells password managers this is a registration
+    form so they offer to save the new credential, not auto-fill an old one.
+  - {% load static %}: Loads the shared stylesheet from client/static/css/.
+  =============================================================================
+#}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">

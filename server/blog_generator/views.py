@@ -1,3 +1,80 @@
+"""
+=============================================================================
+FILE: server/blog_generator/views.py
+PURPOSE: The core controller of the application. This file contains every
+         view function — the Python code that runs in response to HTTP
+         requests and decides what data to fetch and what HTML to return.
+=============================================================================
+
+HOW IT WORKS — OVERALL FLOW:
+  Every URL in urls.py maps to one function in this file. Django calls that
+  function with the incoming HTTP Request object, and the function returns
+  an HTTP Response (HTML page, JSON, or a data stream).
+
+VIEWS DEFINED IN THIS FILE:
+
+  1. index(request)
+     Renders the main dashboard (index.html). Protected by @login_required
+     so only authenticated users can see it.
+
+  2. generate_blog(request)  ← THE HEART OF THE APP
+     Accepts a POST request with a YouTube URL.
+     Instead of processing everything then sending ONE response, it uses a
+     Python generator function (stream_generator) with Django's
+     StreamingHttpResponse. This allows it to 'yield' (send) progress
+     updates to the browser in real time as each stage completes:
+       Stage 1 → Extract video title via yt-dlp
+       Stage 2 → Download audio stream via yt-dlp + FFmpeg
+       Stage 3 → Transcribe audio via AssemblyAI SDK
+       Stage 4 → Generate article via OpenRouter (LLM API)
+       Stage 5 → Save to database, send final HTML to browser
+
+  3. yt_title(link)
+     A helper that calls yt-dlp in metadata-only mode (no download) to
+     quickly grab the video's title string for database labeling.
+
+  4. download_audio(link)
+     Calls yt-dlp to download the best available audio track, then runs
+     it through FFmpeg (via yt-dlp's FFmpegExtractAudio post-processor)
+     to produce an MP3 file saved in server/media/.
+
+  5. get_transcription(link)
+     Sends the MP3 file to AssemblyAI's Universal neural transcription
+     model. Waits for the result and returns the text. Returns None if
+     the transcription job fails (bad audio, timeout, etc.).
+
+  6. call_synthesis_engine(prompt)
+     Sends the raw transcript text to OpenRouter's chat completions API.
+     Uses the "openrouter/free" model auto-router which automatically
+     picks the best available free LLM at runtime (DeepSeek, Llama, etc.).
+     Also strips <think> tags that some reasoning models include.
+
+  7. generate_blog_from_transcription(transcription)
+     Builds the master prompt string that instructs the LLM exactly how
+     to structure the article, then calls call_synthesis_engine().
+
+  8. blog_list(request) / blog_details(request, pk)
+     Data retrieval views. Each query is scoped to the logged-in user
+     (filter(user=request.user)) so users can only ever access their own data.
+
+  9. user_login / user_signup / user_logout
+     Standard Django auth flows. Passwords are NEVER stored in plain text —
+     Django's create_user() automatically applies PBKDF2+SHA256 hashing.
+     Password strength is validated by Django's built-in AUTH_PASSWORD_VALIDATORS.
+
+SECURITY LAYERS:
+  - @login_required: Redirects unauthenticated requests to /login.
+  - CSRF validation: Enforced by Django's CsrfViewMiddleware for all POSTs.
+  - Object-level ownership: blog_details uses .get(id=pk, user=request.user)
+    so guessing another article's ID in the URL returns a 404/redirect.
+  - Input validation: YouTube URL is regex-checked before any API is called.
+
+THIRD-PARTY LIBRARIES USED:
+  - assemblyai: Official AssemblyAI Python SDK for speech-to-text.
+  - yt_dlp: YouTube download library (fork of youtube-dl) for audio extraction.
+  - requests: HTTP library for calling the OpenRouter REST API.
+=============================================================================
+"""
 import re
 import json
 import os
@@ -31,79 +108,90 @@ def index(request):
 @login_required
 def generate_blog(request):
     """
-    Main entry point for article generation.
-    Returns a StreamingHttpResponse to allow real-time progress updates in the UI.
-    Using 'application/x-ndjson' allows us to send multiple JSON objects in one stream.
+    This is the heart of the application. It orchestrates the entire process 
+    of turning a YouTube video into a readable article. 
+    
+    We use a StreamingHttpResponse because the process takes time (downloading, 
+    transcribing, and AI processing). Streaming allows us to give the user 
+    real-time feedback so they know the app hasn't frozen.
     """
     if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return JsonResponse({'error': 'Only POST requests are allowed here!'}, status=405)
 
     try:
-        # Extract YouTube link from the JSON request body
+        # We expect a JSON body containing the 'link' property.
         data = json.loads(request.body)
         yt_link = data.get('link', '').strip()
     except (json.JSONDecodeError, AttributeError):
-        return JsonResponse({'error': 'Invalid data sent'}, status=400)
+        return JsonResponse({'error': 'The data sent was malformed.'}, status=400)
 
-    # Basic Regex to ensure the link belongs to YouTube
+    # Basic check to make sure it's actually a YouTube link before we start 
+    # spinning up expensive AI services.
     if not yt_link or not re.match(
         r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+', yt_link
     ):
-        return JsonResponse({'error': 'Please provide a valid YouTube URL.'}, status=400)
+        return JsonResponse({'error': 'That doesn\'t look like a valid YouTube URL.'}, status=400)
 
 
     def stream_generator():
         """
-        The Generator function that processes the content stage-by-stage.
-        Each 'yield' sends a JSON chunk back to the browser immediately.
+        This inner generator function yields chunks of JSON. 
+        Each 'yield' is immediately pushed to the browser.
         """
-        print(f"\n>>> INITIATING STREAMING PIPELINE for: {yt_link}")
+        print(f"\n[PIPELINE START] User: {request.user} | URL: {yt_link}")
         
         try:
-            # Stage 1: Metadata Extraction
-            # We fetch the video title first for the database record
-            yield json.dumps({'step': 1, 'msg': 'Extracting Video Metadata'}) + "\n"
+            # STEP 1: Get the video title. 
+            # We do this first so we can label the entry in the database.
+            yield json.dumps({'step': 1, 'msg': 'Fetching video details'}) + "\n"
             title = yt_title(yt_link)
             
-            # Stage 2: Audio Extraction
-            # Downloads the best available audio stream and converts it to MP3 using FFmpeg
-            yield json.dumps({'step': 2, 'msg': 'Downloading Audio Stream'}) + "\n"
+            # STEP 2: Extract Audio. 
+            # AssemblyAI needs an audio file to transcribe. We use yt-dlp to 
+            # grab the best audio stream and FFmpeg to save it as an MP3.
+            yield json.dumps({'step': 2, 'msg': 'Extracting audio from video'}) + "\n"
             audio_file = download_audio(yt_link)
             
-            # Stage 3: Neural Transcription
-            # Sends the local MP3 to AssemblyAI's 'Universal' model for high-fidelity speech-to-text
-            yield json.dumps({'step': 3, 'msg': 'Transcribing with AssemblyAI'}) + "\n"
+            # STEP 3: Transcription.
+            # We send the MP3 to AssemblyAI. Their 'universal' model is great 
+            # at handling different accents and audio qualities.
+            yield json.dumps({'step': 3, 'msg': 'Transcribing speech to text'}) + "\n"
             transcription = get_transcription(yt_link)
             if not transcription:
-                yield json.dumps({'error': 'Transcription failed'}) + "\n"
+                yield json.dumps({'error': 'We couldn\'t get a clean transcript. Try another video.'}) + "\n"
                 return
 
-            # Stage 4: AI Contextual Synthesis
-            # Restructures the raw transcript into a professional article format using OpenRouter
-            yield json.dumps({'step': 4, 'msg': 'Synthesizing Professional Article'}) + "\n"
+            # STEP 4: AI Article Generation.
+            # Raw transcripts are usually messy. We send the text to a Large 
+            # Language Model (via OpenRouter) to rewrite it into a structured, 
+            # professional article.
+            yield json.dumps({'step': 4, 'msg': 'AI is writing your article'}) + "\n"
             blog_content = generate_blog_from_transcription(transcription)
             if not blog_content:
-                yield json.dumps({'error': 'AI synthesis failed'}) + "\n"
+                yield json.dumps({'error': 'The AI synthesis failed. This usually happens if the transcript is too short.'}) + "\n"
                 return
 
-            # Archiving: Save to SQLite
-            # We persist the data so the user can see it in their 'My Articles' list later
-            print(f"--- [Final] Archiving Content ---")
+            # STEP 5: Persistence.
+            # Save the result to the database so the user can access it 
+            # later from their dashboard.
+            print(f"[DATABASE] Saving article: {title}")
             new_post = BlogPost.objects.create(
                 user=request.user,
                 youtube_title=title,
                 youtube_link=yt_link,
                 generated_content=blog_content,
             )
-            print(f">>> SUCCESS: Article #{new_post.id} Created\n")
+            print(f"[PIPELINE SUCCESS] ID: {new_post.id}")
 
-            # Signal 'Complete' to the UI and send the final HTML content
-            yield json.dumps({'step': 5, 'msg': 'Complete', 'content': blog_content}) + "\n"
+            # Final payload: Tells the UI we are done and provides the full content.
+            yield json.dumps({'step': 5, 'msg': 'Success!', 'content': blog_content}) + "\n"
 
         except Exception as e:
-            print(f"!!! STREAMING EXCEPTION: {e}")
-            yield json.dumps({'error': str(e)}) + "\n"
+            # Catch-all for unexpected issues (network drops, API timeouts, etc.)
+            print(f"[PIPELINE ERROR] {str(e)}")
+            yield json.dumps({'error': f'Something went wrong: {str(e)}'}) + "\n"
 
+    # NDJSON is the standard for streaming multiple JSON objects.
     return StreamingHttpResponse(stream_generator(), content_type='application/x-ndjson')
 
 
