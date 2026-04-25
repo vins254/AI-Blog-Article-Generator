@@ -1,53 +1,96 @@
+{% comment %}
+  =============================================================================
+  FILE: client/templates/all-blogs.html
+  PURPOSE: The "Article Archive" page — shows every article the logged-in
+           user has ever generated, listed from newest to oldest.
+  =============================================================================
+
+  HOW IT WORKS:
+  - Django's view (blog_list in views.py) queries the BlogPost model and passes
+    a list called 'blog_articles' into this template.
+  - We loop over that list using Django's {% for %} tag to build the card grid.
+  - The {% empty %} tag handles the edge case where the user has no articles yet,
+    giving them a friendly prompt to go create their first one.
+
+  FEATURES & TOOLS:
+  - Django Template Language (DTL): {% for %}, {% empty %}, {% endfor %},
+    {{ variable }} syntax for server-side HTML rendering.
+  - `|truncatechars:120` filter: Automatically shortens the article preview
+    text to 120 characters so the list stays clean and scannable.
+  - `|length` and `|pluralize` filters: Dynamically display "1 record" vs
+    "3 records" without any extra Python code.
+  - `|date:"M d, Y"` filter: Formats the stored UTC timestamp into a
+    human-friendly string like "Apr 25, 2026".
+  - Security: This page is protected by the @login_required decorator in
+    views.py. Unauthenticated users are redirected to /login automatically.
+  - `{% load static %}`: Enables the {% static %} tag so we can reference
+    the CSS file from client/static/ correctly regardless of deployment environment.
+  =============================================================================
+{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archive — ContentFlow</title>
+    <title>My Articles — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
-        <a href="/" class="brand">
-            ContentFlow <span class="brand-badge">App</span>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
         </a>
-        <div class="nav-links">
-            <a href="/" class="nav-link">Dashboard</a>
-            <a href="/blog-list" class="nav-link" style="color: var(--text-primary);">Archive</a>
-            <a href="/logout" class="nav-link">Logout</a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/" class="btn-nav btn-nav-outline">New Article</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <div class="container">
-        <header style="margin-bottom: 3rem;">
-            <h1 style="font-size: 2rem; font-weight: 800;">Your Archive</h1>
-            <p style="color: var(--text-secondary);">Historically synthesized publications and technical drafts.</p>
-        </header>
-        
-        <div class="archive-grid">
-            {% for article in blog_articles %}
-            <div class="blog-card">
-                <a href="/blog-details/{{ article.id }}/" style="text-decoration: none; flex: 1;">
-                    <div class="blog-card-title">{{ article.youtube_title }}</div>
-                    <p class="blog-card-preview">{{ article.generated_content|striptags|truncatechars:140 }}</p>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <div class="blog-list-header">
+                <h2>Article Archive</h2>
+                <span class="blog-count">{{ blog_articles|length }} record{{ blog_articles|length|pluralize }}</span>
+            </div>
+
+            <div>
+                {% for article in blog_articles reversed %}
+                <a href="/blog-details/{{ article.id }}/" class="blog-item">
+                    <div class="blog-item-title">{{ article.youtube_title }}</div>
+                    <div class="blog-item-preview">{{ article.generated_content|truncatechars:120 }}</div>
+                    <div class="blog-item-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="meta-tag">Processed</span>
+                            <span>{{ article.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <form action="/delete-blog/{{ article.id }}/" method="GET" style="display:inline;">
+                            <button type="submit" 
+                                    style="background:none; border:none; color:#f85149; font-size:0.8rem; cursor:pointer;"
+                                    onclick="return confirm('Permanently delete this record?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </a>
-                <div class="blog-card-footer">
-                    <span>{{ article.created_at|date:"M d, Y" }}</span>
-                    <a href="/delete-blog/{{ article.id }}/" 
-                       style="color: var(--danger); text-decoration: none; font-weight: 600;"
-                       onclick="return confirm('Delete this publication?')">
-                        Remove
-                    </a>
+                {% empty %}
+                <div class="empty-state">
+                    <h3>No records found</h3>
+                    <p>Process your first video link to generate an article.</p>
+                    <a href="/" class="btn btn-primary">Process New Content</a>
                 </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div style="grid-column: 1 / -1; padding: 4rem; border: 2px dashed var(--border-soft); border-radius: 12px; text-align: center;">
-                <p style="color: var(--text-muted);">No records found in your archive.</p>
-                <a href="/" class="nav-link" style="color: var(--accent); display: block; margin-top: 1rem;">Process your first video →</a>
-            </div>
-            {% endfor %}
         </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
+    </footer>
 </body>
 </html>
