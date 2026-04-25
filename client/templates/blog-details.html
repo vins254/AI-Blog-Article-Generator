@@ -35,6 +35,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ blog_article_detail.youtube_title }} — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{% static 'js/theme-controller.js' %}"></script>
 </head>
 <body>
@@ -45,7 +46,9 @@
             ContentFlow
         </a>
         <div class="navbar-links">
-            <button id="themeToggle" class="theme-toggle">Mode</button>
+            <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
+                <i data-lucide="sun"></i>
+            </button>
             <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
             <a href="/blog-list" class="btn-nav btn-nav-outline">Archive</a>
             <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
