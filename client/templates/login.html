@@ -40,14 +40,16 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
     <div class="container">
-        <main class="auth-container">
-            <header class="section-header">
-                <div class="brand" style="margin-bottom: 2rem;">
-                    <i data-lucide="layers" class="accent-text"></i>
-                    ContentFlow<span class="brand-dot">.</span>
+        <main class="auth-card card">
+            <header style="text-align: center; margin-bottom: var(--s-8);">
+                <div class="brand" style="justify-content: center; margin-bottom: var(--s-4);">
+                    <div class="brand-icon">
+                        <i data-lucide="layers" style="width:18px; height:18px;"></i>
+                    </div>
+                    <span>ContentFlow</span>
                 </div>
-                <h1>Sign in</h1>
-                <p class="text-secondary">Access your editorial workflow.</p>
+                <h1>Welcome back</h1>
+                <p class="text-secondary">Sign in to your editorial studio.</p>
             </header>
 
             {% if error_message %}

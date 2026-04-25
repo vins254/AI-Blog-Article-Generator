@@ -57,7 +57,9 @@
     <nav class="navbar">
         <div class="nav-group">
             <div class="brand">
-                <i data-lucide="layers" class="accent-text"></i>
+                <div class="brand-icon">
+                    <i data-lucide="layers" style="width:18px; height:18px;"></i>
+                </div>
                 <span>ContentFlow</span>
             </div>
             <a href="/" class="nav-link">Dashboard</a>
@@ -65,7 +67,7 @@
         </div>
         <div class="nav-group">
             <div class="user-menu">
-                <span class="nav-link" style="opacity: 0.7;">{{ user.username }}</span>
+                <span class="nav-link" style="opacity: 0.5;">{{ user.username }}</span>
                 <div class="user-badge">{{ user.username|slice:":1"|upper }}</div>
             </div>
             <a href="/logout" class="nav-link">Logout</a>
@@ -73,76 +75,67 @@
     </nav>
 
     <div class="container">
-        <!-- ── DASHBOARD ── -->
-        <main class="dashboard">
-            <section class="input-section">
-                <header class="section-header">
-                    <span class="badge">Workflow Engine</span>
-                    <h1>Video to Editorial Article</h1>
-                    <p class="text-secondary">Transform technical speech into structured, readable publications.</p>
-                </header>
+        <main>
+            <!-- ── HERO (Centered & Bold) ── -->
+            <section class="hero-section">
+                <h1>Crafted for<br>Storytellers.</h1>
+                <p class="text-secondary">Transform any stream into a high-end publication in seconds.</p>
 
-                <div class="input-group" id="inputGroup">
-                    <input type="url" id="youtubeLink" placeholder="Paste YouTube link here..." required>
-                    <button id="generateBlogButton">Generate</button>
+                <div class="input-container">
+                    <div class="input-group" id="inputGroup">
+                        <input type="url" id="youtubeLink" placeholder="Paste YouTube link here..." required>
+                        <button id="generateBlogButton">Generate</button>
+                    </div>
+                    <span class="error-text" id="url-error" style="margin-top: 0.5rem; display: none;">Please enter a valid YouTube URL.</span>
                 </div>
-                <span class="error-text" id="url-error" style="margin-top: 0.5rem; display: none; color: red;">Please enter a valid YouTube URL.</span>
             </section>
 
-            <!-- ── PIPELINE (SYSTEM VISIBILITY) ── -->
-            <section id="pipeline-ui" class="pipeline-container">
-                <div class="progress-bar">
-                    <div id="progress-inner" class="progress-inner"></div>
+            <!-- ── PIPELINE (Modern Minimalism) ── -->
+            <section id="pipeline-ui" class="pipeline-ui" style="display: none;">
+                <div id="progress-bar" class="progress-bar" style="margin-bottom: 2rem;">
+                    <div id="progress-inner" class="progress-inner" style="width: 0%; height: 2px;"></div>
                 </div>
-
-                <div class="pipeline-steps">
-                    <div class="pipeline-step" id="step-1">
-                        <div class="step-marker">1</div>
-                        <div class="step-details">
-                            <span class="step-label">Analysis</span>
-                            <span class="step-log" id="log-1">Identifying video source...</span>
-                        </div>
+                
+                <div class="step-row" id="step-1">
+                    <div class="dot"></div>
+                    <div class="step-details">
+                        <span class="step-label">Analysis</span>
+                        <span class="step-log" id="log-1">Waiting...</span>
                     </div>
-                    
-                    <div class="pipeline-step" id="step-2">
-                        <div class="step-marker">2</div>
-                        <div class="step-details">
-                            <span class="step-label">Extraction</span>
-                            <span class="step-log" id="log-2">Pulling audio from stream...</span>
-                        </div>
+                </div>
+                <div class="step-row" id="step-2">
+                    <div class="dot"></div>
+                    <div class="step-details">
+                        <span class="step-label">Extraction</span>
+                        <span class="step-log" id="log-2">Waiting...</span>
                     </div>
-
-                    <div class="pipeline-step" id="step-3">
-                        <div class="step-marker">3</div>
-                        <div class="step-details">
-                            <span class="step-label">Transcription</span>
-                            <span class="step-log" id="log-3">Turning speech into text...</span>
-                        </div>
+                </div>
+                <div class="step-row" id="step-3">
+                    <div class="dot"></div>
+                    <div class="step-details">
+                        <span class="step-label">Transcription</span>
+                        <span class="step-log" id="log-3">Waiting...</span>
                     </div>
-
-                    <div class="pipeline-step" id="step-4">
-                        <div class="step-marker">4</div>
-                        <div class="step-details">
-                            <span class="step-label">Synthesis</span>
-                            <span class="step-log" id="log-4">Structuring article draft...</span>
-                        </div>
+                </div>
+                <div class="step-row" id="step-4">
+                    <div class="dot"></div>
+                    <div class="step-details">
+                        <span class="step-label">Synthesis</span>
+                        <span class="step-log" id="log-4">Waiting...</span>
                     </div>
                 </div>
             </section>
 
             <!-- ── ARTICLE READER (PUBLICATION FEEL) ── -->
-            <section id="blogOutput" class="blog-output-section" style="display: none;">
-                <div class="article-header">
-                    <div class="article-meta">
-                        <span id="article-date"></span>
-                        <span class="dot">·</span>
-                        <span id="read-time"></span>
-                        <span class="dot">·</span>
-                        <a id="video-source" href="#" target="_blank" class="accent-text">Original Video</a>
+            <section id="blogOutput" class="article-container" style="display: none;">
+                <header class="article-header" style="margin-bottom: 3rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 2rem;">
+                    <h1 id="generatedBlogTitle" style="font-size: 2.5rem; line-height: 1.2;"></h1>
+                    <div class="article-meta" style="margin-top: 1.5rem; display: flex; gap: 2rem; font-size: 0.85rem; color: var(--text-d);">
+                        <span><i data-lucide="calendar" style="width:14px; margin-right: 0.5rem;"></i> {% now "F j, Y" %}</span>
+                        <span id="sourceLink"></span>
                     </div>
-                    <h1 id="article-title"></h1>
-                </div>
-                <div id="blogContent" class="article-body"></div>
+                </header>
+                <div id="generatedBlogContent" class="article-body"></div>
             </section>
         </main>
     </div>
