@@ -45,69 +45,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Automate your content workflow by converting YouTube videos into structured articles.">
     <title>ContentFlow — Video Content Automation</title>
+    
+    <!-- Design System -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <!-- ── NAVIGATION ── -->
     <nav class="navbar">
-        <a href="/" class="navbar-brand">
-            <div class="brand-icon">CF</div>
-            ContentFlow
-        </a>
+        <div class="brand">
+            <i data-lucide="layers" class="accent-text"></i>
+            ContentFlow<span class="brand-dot">.</span>
+        </div>
         <div class="navbar-links">
-            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
-            <a href="/blog-list" class="btn-nav btn-nav-outline">My Articles</a>
-            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
+            <a href="/blog-list" class="btn-nav">My Articles</a>
+            <a href="/logout" class="btn-nav">Logout</a>
         </div>
     </nav>
 
-    <!-- ── MAIN DASHBOARD ── -->
-    <main class="main-content">
-        <div class="card">
-            <div class="hero-section">
-                <h1 class="hero-title">Video to Article Automation</h1>
-                <p class="hero-description">
-                    Provide a YouTube link to process the video transcript 
-                    and generate a structured, professional article in real-time.
-                </p>
-            </div>
+    <div class="container">
+        <!-- ── DASHBOARD ── -->
+        <main class="dashboard">
+            <section class="input-section">
+                <header class="section-header">
+                    <span class="badge">Workflow Engine</span>
+                    <h1>Video to Editorial Article</h1>
+                    <p class="text-secondary">Transform technical speech into structured, readable publications.</p>
+                </header>
 
-            <!-- YouTube URL Submission -->
-            <div class="input-section">
-                <h3>Video Source</h3>
                 <div class="input-group" id="inputGroup">
-                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
-                    <button id="generateBlogButton" class="btn btn-primary">
-                        Generate Article
+                    <input type="url" id="youtubeLink" placeholder="Paste YouTube URL..." autocomplete="off">
+                    <button id="generateBlogButton">
+                        Generate
                     </button>
                 </div>
-            </div>
+            </section>
 
-            <!-- REAL-TIME PROGRESS FEEDBACK
-                 This section is hidden by default and activated via JavaScript
-                 when a generation request begins. -->
-            <div id="loading-container" class="loading-container">
-                <div class="spinner"></div>
-                <span class="loading-text" id="loadingText">Connecting to source...</span>
-            </div>
-
-            <!-- ARTICLE OUTPUT
-                 Dynamic container that expands to show the AI-generated results. -->
-            <div id="blogOutput" class="blog-output">
-                <div class="blog-output-header">
-                    <div class="status-dot"></div>
-                    Processing Complete
+            <!-- ── PIPELINE (SYSTEM VISIBILITY) ── -->
+            <section id="pipeline-ui" class="pipeline-container">
+                <div class="progress-bar">
+                    <div id="progress-inner" class="progress-inner"></div>
                 </div>
-                <div id="blogContent" class="blog-content"></div>
-            </div>
-        </div>
-    </main>
 
-    <footer class="footer">
-        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
-    </footer>
+                <div class="pipeline-steps">
+                    <div class="pipeline-step" id="step-1">
+                        <div class="step-marker">1</div>
+                        <div class="step-details">
+                            <span class="step-label">Analysis</span>
+                            <span class="step-log" id="log-1">Identifying video source...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="pipeline-step" id="step-2">
+                        <div class="step-marker">2</div>
+                        <div class="step-details">
+                            <span class="step-label">Extraction</span>
+                            <span class="step-log" id="log-2">Pulling audio from stream...</span>
+                        </div>
+                    </div>
 
-    <!-- Global Toast notification for errors/success messages -->
+                    <div class="pipeline-step" id="step-3">
+                        <div class="step-marker">3</div>
+                        <div class="step-details">
+                            <span class="step-label">Transcription</span>
+                            <span class="step-log" id="log-3">Turning speech into text...</span>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-step" id="step-4">
+                        <div class="step-marker">4</div>
+                        <div class="step-details">
+                            <span class="step-label">Synthesis</span>
+                            <span class="step-log" id="log-4">Structuring article draft...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── ARTICLE READER (PUBLICATION FEEL) ── -->
+            <section id="blogOutput" class="blog-output-section" style="display: none;">
+                <div class="article-header">
+                    <div class="article-meta">
+                        <span id="article-date"></span>
+                        <span class="dot">·</span>
+                        <span id="read-time"></span>
+                        <span class="dot">·</span>
+                        <a id="video-source" href="#" target="_blank" class="accent-text">Original Video</a>
+                    </div>
+                    <h1 id="article-title"></h1>
+                </div>
+                <div id="blogContent" class="article-body"></div>
+            </section>
+        </main>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <!-- ── CORE FRONTEND LOGIC ── -->
@@ -118,6 +151,9 @@
          * Cross-Site Request Forgery. This function parses the document cookies 
          * to find the 'csrftoken' value.
          */
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -134,72 +170,81 @@
         }
         const csrftoken = getCookie('csrftoken');
         
-        /**
-         * UI STATE MANAGEMENT
-         * Manages the visibility of the loading spinner and disables the button 
-         * to prevent duplicate submissions while a request is in flight.
-         */
-        function setLoading(active) {
-            const container = document.getElementById('loading-container');
-            const btn = document.getElementById('generateBlogButton');
-            if (active) {
-                container.classList.add('active');
-                btn.disabled = true;
-            } else {
-                container.classList.remove('active');
-                btn.disabled = false;
+        function updatePipeline(step, msg) {
+            const container = document.getElementById('pipeline-ui');
+            const progressBar = document.getElementById('progress-inner');
+            container.classList.add('active');
+            
+            // Highlight current step
+            const stepEl = document.getElementById(`step-${step}`);
+            if (stepEl) {
+                stepEl.classList.add('active');
             }
+
+            // Update log message if provided
+            const logEl = document.getElementById(`log-${step}`);
+            if (logEl && msg) {
+                logEl.textContent = msg;
+            }
+
+            // Update progress bar
+            progressBar.style.width = `${(step / 4) * 100}%`;
         }
 
-        /**
-         * PERSISTENCE: HYDRATION ON LOAD
-         * When the user reloads the page, we want to restore their previous session data 
-         * so they don't lose their work. We pull this from the browser's localStorage.
-         */
+        function resetPipeline() {
+            document.getElementById('pipeline-ui').classList.remove('active');
+            document.getElementById('progress-inner').style.width = '0%';
+            document.querySelectorAll('.pipeline-step').forEach(s => s.classList.remove('active'));
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem('cf_last_url');
-            const savedContent = localStorage.getItem('cf_last_content');
+            const savedContent = JSON.parse(localStorage.getItem('cf_last_content') || 'null');
             
-            if (savedUrl) {
-                document.getElementById('youtubeLink').value = savedUrl;
-            }
+            if (savedUrl) document.getElementById('youtubeLink').value = savedUrl;
             
             if (savedContent) {
-                const blogContent = document.getElementById('blogContent');
-                const blogOutput = document.getElementById('blogOutput');
-                blogContent.innerHTML = savedContent;
-                blogOutput.classList.add('active');
+                renderArticle(savedContent.title, savedContent.html, savedContent.url);
             }
         });
 
-        // Track input changes to save the URL in real-time
+        function renderArticle(title, html, url) {
+            const blogOutput = document.getElementById('blogOutput');
+            const blogContent = document.getElementById('blogContent');
+            const titleEl = document.getElementById('article-title');
+            const dateEl = document.getElementById('article-date');
+            const readTimeEl = document.getElementById('read-time');
+            const sourceEl = document.getElementById('video-source');
+
+            titleEl.textContent = title;
+            blogContent.innerHTML = html;
+            dateEl.textContent = "Processed recently";
+            sourceEl.href = url;
+            
+            // Estimate reading time (200 wpm)
+            const words = blogContent.innerText.split(/\s+/).length;
+            const time = Math.max(1, Math.ceil(words / 200));
+            readTimeEl.textContent = `${time} min read`;
+
+            blogOutput.style.display = 'block';
+        }
+
         document.getElementById('youtubeLink').addEventListener('input', (e) => {
             localStorage.setItem('cf_last_url', e.target.value.trim());
         });
 
-        /**
-         * MAIN GENERATION PIPELINE
-         * This uses the Fetch API with ReadableStream to handle the NDJSON 
-         * (Newline Delimited JSON) stream from the Django backend. This allows us 
-         * to update the UI step-by-step as the AI processes the video.
-         */
         document.getElementById('generateBlogButton').addEventListener('click', async () => {
             const youtubeLink = document.getElementById('youtubeLink').value.trim();
-            const blogContent = document.getElementById('blogContent');
-            const blogOutput = document.getElementById('blogOutput');
-            const loadingText = document.getElementById('loadingText');
+            const btn = document.getElementById('generateBlogButton');
 
             if (!youtubeLink) return;
 
-            // Prepare UI for new generation
-            setLoading(true);
-            blogOutput.classList.remove('active');
-            blogContent.innerHTML = '';
-            localStorage.removeItem('cf_last_content'); // Clear old content
+            btn.disabled = true;
+            btn.textContent = "Running...";
+            document.getElementById('blogOutput').style.display = 'none';
+            resetPipeline();
 
             try {
-                // We send a POST request with the YouTube URL.
-                // Notice the 'X-CSRFToken' header which is required by Django security.
                 const response = await fetch('/generate-blog', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
@@ -208,42 +253,37 @@
 
                 if (!response.ok) throw new Error('Server error');
 
-                // The 'body' of the response is a stream we can read chunk-by-chunk.
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
 
-                // Keep reading until the stream is 'done'.
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    // Decode binary data to string and append to our buffer.
                     buffer += decoder.decode(value, { stream: true });
-                    
-                    // Split by newlines as the server sends one JSON object per line.
                     const lines = buffer.split('\n');
-                    buffer = lines.pop(); // The last element might be an incomplete JSON string.
+                    buffer = lines.pop();
 
                     for (const line of lines) {
                         if (!line.trim()) continue;
                         try {
                             const data = JSON.parse(line);
-                            
-                            // 1. Error check from backend
                             if (data.error) throw new Error(data.error);
 
-                            // 2. Step-by-step progress feedback (Metadata -> Audio -> Transcription -> AI Synthesis)
-                            if (data.msg) {
-                                loadingText.textContent = data.step 
-                                    ? `[${data.step}/4] ${data.msg}...` 
-                                    : `${data.msg}...`;
+                            if (data.step >= 1 && data.step <= 4) {
+                                // Humanize labels based on backend step
+                                let humanMsg = "";
+                                switch(data.step) {
+                                    case 1: humanMsg = "Identifying video source..."; break;
+                                    case 2: humanMsg = "Pulling audio from stream..."; break;
+                                    case 3: humanMsg = "Turning speech into text..."; break;
+                                    case 4: humanMsg = "Structuring article draft..."; break;
+                                }
+                                updatePipeline(data.step, humanMsg);
                             }
 
-                            // 3. Final Content rendering
-                            // When step 5 is reached, we have the full article.
                             if (data.step === 5 && data.content) {
-                                // A basic Markdown-to-HTML parser for the generated content.
                                 let html = data.content
                                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                                     .replace(/^### (.*$)/gm, '<h3>$1</h3>')
@@ -254,22 +294,25 @@
                                     .replace(/\n/g, '<br>');
                                 
                                 const finalHtml = '<p>' + html + '</p>';
-                                blogContent.innerHTML = finalHtml;
-                                blogOutput.classList.add('active');
+                                const title = data.title || "Untitled Article";
                                 
-                                // PERSISTENCE: Save the final article so it's there after a refresh!
-                                localStorage.setItem('cf_last_content', finalHtml);
+                                renderArticle(title, finalHtml, youtubeLink);
+                                localStorage.setItem('cf_last_content', JSON.stringify({
+                                    title: title,
+                                    html: finalHtml,
+                                    url: youtubeLink
+                                }));
+                                document.getElementById('pipeline-ui').classList.remove('active');
                             }
-                        } catch (e) {
-                            console.error("Stream parse error:", e);
-                        }
+                        } catch (e) { console.error("Stream parse error:", e); }
                     }
                 }
             } catch (error) {
                 console.error('Pipeline Error:', error);
-                alert('An error occurred during article generation. Please check the URL and try again.');
+                alert('Generation failed. Please verify the URL.');
             }
-            setLoading(false);
+            btn.disabled = false;
+            btn.textContent = "Generate";
         });
     </script>
 </body>
