@@ -26,9 +26,17 @@ class UserSignupForm(forms.Form):
         username = self.cleaned_data.get('username')
         if User.objects.filter(username=username).exists():
             raise ValidationError("Username is already taken.")
+        if len(username) < 3:
+            raise ValidationError("Username must be at least 3 characters.")
         if not username.replace('_', '').isalnum():
             raise ValidationError("Username can only contain alphanumeric characters and underscores.")
         return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("This email is already registered.")
+        return email
 
     def clean(self):
         cleaned_data = super().clean()

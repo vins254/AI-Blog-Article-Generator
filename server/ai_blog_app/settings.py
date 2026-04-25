@@ -215,3 +215,21 @@ OPENROUTER_API_KEY = config("OPENROUTER_API_KEY", default=None)
 
 # ── AUTHENTICATION ──
 LOGIN_URL = 'login'
+
+# Standard Django security policies for password strength.
+# These are automatically enforced by the validate_password() call in our SignupForm.
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8}
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
