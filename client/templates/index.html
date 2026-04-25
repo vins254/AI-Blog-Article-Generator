@@ -53,15 +53,22 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <!-- ── NAVIGATION ── -->
+    <!-- ── NAVIGATION (Professional Header) ── -->
     <nav class="navbar">
-        <div class="brand">
-            <i data-lucide="layers" class="accent-text"></i>
-            ContentFlow<span class="brand-dot">.</span>
+        <div class="nav-group">
+            <div class="brand">
+                <i data-lucide="layers" class="accent-text"></i>
+                <span>ContentFlow</span>
+            </div>
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/blog-list" class="nav-link">Archive</a>
         </div>
-        <div class="navbar-links">
-            <a href="/blog-list" class="btn-nav">My Articles</a>
-            <a href="/logout" class="btn-nav">Logout</a>
+        <div class="nav-group">
+            <div class="user-menu">
+                <span class="nav-link" style="opacity: 0.7;">{{ user.username }}</span>
+                <div class="user-badge">{{ user.username|slice:":1"|upper }}</div>
+            </div>
+            <a href="/logout" class="nav-link">Logout</a>
         </div>
     </nav>
 
