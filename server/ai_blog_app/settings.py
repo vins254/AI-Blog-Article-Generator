@@ -87,7 +87,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 # ALLOWED_HOSTS: Accepts the Render domain automatically.
 # The RENDER_EXTERNAL_HOSTNAME env var is injected by Render at build time.
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
 RENDER_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_HOSTNAME)
@@ -196,7 +196,10 @@ else:
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(ROOT_DIR, 'client', 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# Using CompressedStaticFilesStorage instead of CompressedManifestStaticFilesStorage.
+# The Manifest version crashes with a 500 if ANY static file can't be resolved
+# at startup, which is a common cause of silent 500 errors when DEBUG=False.
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 # Media files (temporary audio extractions reside here during processing)
 MEDIA_URL = '/media/'
