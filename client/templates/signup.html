@@ -35,120 +35,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — ContentFlow</title>
+    <title>Create Account — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-    <div class="container">
-        <main class="auth-card card">
-            <header style="text-align: center; margin-bottom: var(--s-8);">
-                <div class="brand" style="justify-content: center; margin-bottom: var(--s-4);">
-                    <div class="brand-icon">
-                        <i data-lucide="layers" style="width:18px; height:18px;"></i>
-                    </div>
-                    <span>ContentFlow</span>
-                </div>
-                <h1>Create Studio Account</h1>
-                <p class="text-secondary">Start your editorial journey today.</p>
-            </header>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-icon" style="color: white; font-weight: bold;">CF</div>
+                <h2>Get Started</h2>
+                <p>Register for a ContentFlow account</p>
+            </div>
 
             {% if error_message %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
+            <div class="form-error">
                 {{ error_message }}
             </div>
             {% endif %}
 
             {% if form.errors %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
-                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-                {% for field in form %}
-                    {% for error in field.errors %}{{ error }}{% endfor %}
+            <div class="form-error">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <div>{{ field|capfirst }}: {{ error }}</div>
+                    {% endfor %}
                 {% endfor %}
             </div>
             {% endif %}
 
-            <form method="POST" class="auth-form" id="signupForm">
+            <form method="POST">
                 {% csrf_token %}
-                <div class="form-field">
+                <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username" minlength="3" pattern="^[a-zA-Z0-9_]+$">
-                    <span class="error-text" id="username-error">Use at least 3 alphanumeric characters.</span>
+                    <input type="text" id="username" name="username" class="form-input" placeholder="e.g. john_doe" required autocomplete="username">
                 </div>
-                <div class="form-field">
+                <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required autocomplete="email">
-                    <span class="error-text" id="email-error">Please enter a valid email address.</span>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" required autocomplete="email">
                 </div>
-                <div class="form-field">
+                <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="new-password" minlength="8">
-                    <div class="progress-bar" style="height: 1px; margin-top: 0.25rem;">
-                        <div id="passwordStrengthBar" class="progress-inner" style="width: 0%; background: var(--text-muted);"></div>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Create a password" required autocomplete="new-password">
+                    <div class="password-strength">
+                        <div id="passwordStrengthBar" class="password-strength-bar"></div>
                     </div>
-                    <span class="error-text" id="password-error">Password must be at least 8 characters.</span>
                 </div>
-                <div class="form-field">
+                <div class="form-group">
                     <label for="repeatPassword">Confirm Password</label>
-                    <input type="password" id="repeatPassword" name="repeatPassword" required autocomplete="new-password" minlength="8">
-                    <span class="error-text" id="repeat-error">Passwords do not match.</span>
+                    <input type="password" id="repeatPassword" name="repeatPassword" class="form-input" placeholder="Confirm your password" required autocomplete="new-password">
                 </div>
-                <button type="submit" id="submitBtn">Create Account</button>
+                <button type="submit" class="btn btn-primary btn-full">Create Account</button>
             </form>
 
-            <footer style="margin-top: 2rem; text-align: left; font-size: 0.9rem;">
-                <span class="text-secondary">Already a member?</span> 
-                <a href="/login" class="accent-text" style="font-weight: 600; text-decoration: none;">Sign in</a>
-            </footer>
-        </main>
+            <div class="auth-footer">
+                Already have an account? <a href="/login">Sign In</a>
+            </div>
+        </div>
     </div>
+
     <script>
-        lucide.createIcons();
-        
-        const form = document.getElementById('signupForm');
-        const username = document.getElementById('username');
-        const email = document.getElementById('email');
-        const password = document.getElementById('password');
-        const repeat = document.getElementById('repeatPassword');
-        const submitBtn = document.getElementById('submitBtn');
+        const passwordInput = document.getElementById('password');
         const strengthBar = document.getElementById('passwordStrengthBar');
 
-        function validateField(input, condition, errorId) {
-            const error = document.getElementById(errorId);
-            if (condition) {
-                input.classList.remove('invalid');
-                input.classList.add('valid');
-                error.style.display = 'none';
-                return true;
-            } else {
-                input.classList.add('invalid');
-                input.classList.remove('valid');
-                if (input.value.length > 0) error.style.display = 'block';
-                return false;
-            }
-        }
-
-        function checkForm() {
-            const isUserValid = validateField(username, username.value.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username.value), 'username-error');
-            const isEmailValid = validateField(email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value), 'email-error');
-            const isPassValid = validateField(password, password.value.length >= 8, 'password-error');
-            const isMatch = validateField(repeat, repeat.value === password.value && repeat.value.length > 0, 'repeat-error');
-
-            // Password strength logic
-            const val = password.value;
+        passwordInput.addEventListener('input', () => {
+            const val = passwordInput.value;
             let strength = 0;
             if (val.length >= 8) strength++;
             if (/[A-Z]/.test(val)) strength++;
             if (/[0-9]/.test(val)) strength++;
             if (/[^A-Za-z0-9]/.test(val)) strength++;
-            strengthBar.style.width = (val.length > 0 ? (strength + 1) * 20 : 0) + '%';
-            if (strength <= 1) strengthBar.style.background = '#ef4444';
-            else if (strength === 2 || strength === 3) strengthBar.style.background = '#eab308';
-            else if (strength >= 4) strengthBar.style.background = 'var(--accent)';
 
-            submitBtn.disabled = !(isUserValid && isEmailValid && isPassValid && isMatch);
-        }
-
-        [username, email, password, repeat].forEach(el => el.addEventListener('input', checkForm));
+            strengthBar.className = 'password-strength-bar';
+            if (strength <= 1 && val.length > 0) strengthBar.classList.add('weak');
+            else if (strength === 2 || strength === 3) strengthBar.classList.add('medium');
+            else if (strength >= 4) strengthBar.classList.add('strong');
+        });
     </script>
 </body>
 </html>

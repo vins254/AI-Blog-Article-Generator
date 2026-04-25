@@ -45,101 +45,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Automate your content workflow by converting YouTube videos into structured articles.">
     <title>ContentFlow — Video Content Automation</title>
-    
-    <!-- Design System -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <!-- ── NAVIGATION (Professional Header) ── -->
+    <!-- ── NAVIGATION ── -->
     <nav class="navbar">
-        <div class="nav-group">
-            <div class="brand">
-                <div class="brand-icon">
-                    <i data-lucide="layers" style="width:18px; height:18px;"></i>
-                </div>
-                <span>ContentFlow</span>
-            </div>
-            <a href="/" class="nav-link">Dashboard</a>
-            <a href="/blog-list" class="nav-link">Archive</a>
-        </div>
-        <div class="nav-group">
-            <div class="user-menu">
-                <span class="nav-link" style="opacity: 0.5;">{{ user.username }}</span>
-                <div class="user-badge">{{ user.username|slice:":1"|upper }}</div>
-            </div>
-            <a href="/logout" class="nav-link">Logout</a>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
+        </a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/blog-list" class="btn-nav btn-nav-outline">My Articles</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <div class="container">
-        <main>
-            <!-- ── HERO (Centered & Bold) ── -->
-            <section class="hero-section">
-                <h1>Crafted for<br>Storytellers.</h1>
-                <p class="text-secondary">Transform any stream into a high-end publication in seconds.</p>
+    <!-- ── MAIN DASHBOARD ── -->
+    <main class="main-content">
+        <div class="card">
+            <div class="hero-section">
+                <h1 class="hero-title">Video to Article Automation</h1>
+                <p class="hero-description">
+                    Provide a YouTube link to process the video transcript 
+                    and generate a structured, professional article in real-time.
+                </p>
+            </div>
 
-                <div class="input-container">
-                    <div class="input-group" id="inputGroup">
-                        <input type="url" id="youtubeLink" placeholder="Paste YouTube link here..." required>
-                        <button id="generateBlogButton">Generate</button>
-                    </div>
-                    <span class="error-text" id="url-error" style="margin-top: 0.5rem; display: none;">Please enter a valid YouTube URL.</span>
+            <!-- YouTube URL Submission -->
+            <div class="input-section">
+                <h3>Video Source</h3>
+                <div class="input-group" id="inputGroup">
+                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+                    <button id="generateBlogButton" class="btn btn-primary">
+                        Generate Article
+                    </button>
                 </div>
-            </section>
+            </div>
 
-            <!-- ── PIPELINE (Modern Minimalism) ── -->
-            <section id="pipeline-ui" class="pipeline-ui" style="display: none;">
-                <div id="progress-bar" class="progress-bar" style="margin-bottom: 2rem;">
-                    <div id="progress-inner" class="progress-inner" style="width: 0%; height: 2px;"></div>
-                </div>
-                
-                <div class="step-row" id="step-1">
-                    <div class="dot"></div>
-                    <div class="step-details">
-                        <span class="step-label">Analysis</span>
-                        <span class="step-log" id="log-1">Waiting...</span>
-                    </div>
-                </div>
-                <div class="step-row" id="step-2">
-                    <div class="dot"></div>
-                    <div class="step-details">
-                        <span class="step-label">Extraction</span>
-                        <span class="step-log" id="log-2">Waiting...</span>
-                    </div>
-                </div>
-                <div class="step-row" id="step-3">
-                    <div class="dot"></div>
-                    <div class="step-details">
-                        <span class="step-label">Transcription</span>
-                        <span class="step-log" id="log-3">Waiting...</span>
-                    </div>
-                </div>
-                <div class="step-row" id="step-4">
-                    <div class="dot"></div>
-                    <div class="step-details">
-                        <span class="step-label">Synthesis</span>
-                        <span class="step-log" id="log-4">Waiting...</span>
-                    </div>
-                </div>
-            </section>
+            <!-- REAL-TIME PROGRESS FEEDBACK
+                 This section is hidden by default and activated via JavaScript
+                 when a generation request begins. -->
+            <div id="loading-container" class="loading-container">
+                <div class="spinner"></div>
+                <span class="loading-text" id="loadingText">Connecting to source...</span>
+            </div>
 
-            <!-- ── ARTICLE READER (PUBLICATION FEEL) ── -->
-            <section id="blogOutput" class="article-container" style="display: none;">
-                <header class="article-header" style="margin-bottom: 3rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 2rem;">
-                    <h1 id="generatedBlogTitle" style="font-size: 2.5rem; line-height: 1.2;"></h1>
-                    <div class="article-meta" style="margin-top: 1.5rem; display: flex; gap: 2rem; font-size: 0.85rem; color: var(--text-d);">
-                        <span><i data-lucide="calendar" style="width:14px; margin-right: 0.5rem;"></i> {% now "F j, Y" %}</span>
-                        <span id="sourceLink"></span>
-                    </div>
-                </header>
-                <div id="generatedBlogContent" class="article-body"></div>
-            </section>
-        </main>
-    </div>
+            <!-- ARTICLE OUTPUT
+                 Dynamic container that expands to show the AI-generated results. -->
+            <div id="blogOutput" class="blog-output">
+                <div class="blog-output-header">
+                    <div class="status-dot"></div>
+                    Processing Complete
+                </div>
+                <div id="blogContent" class="blog-content"></div>
+            </div>
+        </div>
+    </main>
 
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
+    </footer>
+
+    <!-- Global Toast notification for errors/success messages -->
     <div id="toast" class="toast"></div>
 
     <!-- ── CORE FRONTEND LOGIC ── -->
@@ -150,9 +118,6 @@
          * Cross-Site Request Forgery. This function parses the document cookies 
          * to find the 'csrftoken' value.
          */
-        // Initialize Lucide Icons
-        lucide.createIcons();
-
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -169,148 +134,112 @@
         }
         const csrftoken = getCookie('csrftoken');
         
-        function updatePipeline(step, msg) {
-            const container = document.getElementById('pipeline-ui');
-            const progressBar = document.getElementById('progress-inner');
-            container.classList.add('active');
-            
-            // Highlight current step
-            const stepEl = document.getElementById(`step-${step}`);
-            if (stepEl) {
-                stepEl.classList.add('active');
+        /**
+         * UI STATE MANAGEMENT
+         * Manages the visibility of the loading spinner and disables the button 
+         * to prevent duplicate submissions while a request is in flight.
+         */
+        function setLoading(active) {
+            const container = document.getElementById('loading-container');
+            const btn = document.getElementById('generateBlogButton');
+            if (active) {
+                container.classList.add('active');
+                btn.disabled = true;
+            } else {
+                container.classList.remove('active');
+                btn.disabled = false;
             }
-
-            // Update log message if provided
-            const logEl = document.getElementById(`log-${step}`);
-            if (logEl && msg) {
-                logEl.textContent = msg;
-            }
-
-            // Update progress bar
-            progressBar.style.width = `${(step / 4) * 100}%`;
         }
 
-        function resetPipeline() {
-            document.getElementById('pipeline-ui').classList.remove('active');
-            document.getElementById('progress-inner').style.width = '0%';
-            document.querySelectorAll('.pipeline-step').forEach(s => s.classList.remove('active'));
-        }
-
+        /**
+         * PERSISTENCE: HYDRATION ON LOAD
+         * When the user reloads the page, we want to restore their previous session data 
+         * so they don't lose their work. We pull this from the browser's localStorage.
+         */
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem('cf_last_url');
-            const savedContent = JSON.parse(localStorage.getItem('cf_last_content') || 'null');
+            const savedContent = localStorage.getItem('cf_last_content');
             
-            if (savedUrl) document.getElementById('youtubeLink').value = savedUrl;
+            if (savedUrl) {
+                document.getElementById('youtubeLink').value = savedUrl;
+            }
             
             if (savedContent) {
-                renderArticle(savedContent.title, savedContent.html, savedContent.url);
+                const blogContent = document.getElementById('blogContent');
+                const blogOutput = document.getElementById('blogOutput');
+                blogContent.innerHTML = savedContent;
+                blogOutput.classList.add('active');
             }
         });
 
-        function renderArticle(title, html, url) {
-            const blogOutput = document.getElementById('blogOutput');
-            const blogContent = document.getElementById('blogContent');
-            const titleEl = document.getElementById('article-title');
-            const dateEl = document.getElementById('article-date');
-            const readTimeEl = document.getElementById('read-time');
-            const sourceEl = document.getElementById('video-source');
-
-            titleEl.textContent = title;
-            blogContent.innerHTML = html;
-            dateEl.textContent = "Processed recently";
-            sourceEl.href = url;
-            
-            // Estimate reading time (200 wpm)
-            const words = blogContent.innerText.split(/\s+/).length;
-            const time = Math.max(1, Math.ceil(words / 200));
-            readTimeEl.textContent = `${time} min read`;
-
-            blogOutput.style.display = 'block';
-        }
-
+        // Track input changes to save the URL in real-time
         document.getElementById('youtubeLink').addEventListener('input', (e) => {
             localStorage.setItem('cf_last_url', e.target.value.trim());
         });
 
+        /**
+         * MAIN GENERATION PIPELINE
+         * This uses polling to check the status of a background task.
+         */
         document.getElementById('generateBlogButton').addEventListener('click', async () => {
-            const youtubeLinkInput = document.getElementById('youtubeLink');
-            const youtubeLink = youtubeLinkInput.value.trim();
-            const btn = document.getElementById('generateBlogButton');
-            const urlError = document.getElementById('url-error');
+            const youtubeLink = document.getElementById('youtubeLink').value.trim();
+            const blogContent = document.getElementById('blogContent');
+            const blogOutput = document.getElementById('blogOutput');
+            const loadingText = document.getElementById('loadingText');
 
-            const isUrlValid = /^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.test(youtubeLink);
-            
-            if (!isUrlValid) {
-                youtubeLinkInput.classList.add('invalid');
-                urlError.style.display = 'block';
-                return;
-            } else {
-                youtubeLinkInput.classList.remove('invalid');
-                urlError.style.display = 'none';
-            }
+            if (!youtubeLink) return;
 
-            btn.disabled = true;
-            btn.textContent = "Processing...";
-            document.getElementById('blogOutput').style.display = 'none';
-            resetPipeline();
+            setLoading(true);
+            blogOutput.classList.remove('active');
+            blogContent.innerHTML = '';
 
             try {
-                // 1. Trigger the background task
-                const response = await fetch('/generate-blog', {
+                const response = await fetch('/generate-blog/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                     body: JSON.stringify({ link: youtubeLink })
                 });
 
-                if (!response.ok) throw new Error('Failed to start generation');
-                const { task_id } = await response.json();
-
-                // 2. Poll for status updates
-                const pollInterval = setInterval(async () => {
-                    try {
-                        const statusRes = await fetch(`/task-status/${task_id}/`);
-                        if (!statusRes.ok) throw new Error('Status check failed');
-                        
-                        const data = await statusRes.json();
-                        
-                        // Update UI based on progress
-                        const step = Math.min(4, Math.floor(data.progress / 25) + 1);
-                        updatePipeline(step, data.message);
-                        document.getElementById('progress-inner').style.width = `${data.progress}%`;
-
-                        if (data.status === 'COMPLETED') {
-                            clearInterval(pollInterval);
-                            
-                            // Render final article
-                            renderArticle(data.title, data.content, youtubeLink);
-                            localStorage.setItem('cf_last_content', JSON.stringify({
-                                title: data.title,
-                                html: data.content,
-                                url: youtubeLink
-                            }));
-                            
-                            btn.disabled = false;
-                            btn.textContent = "Generate";
-                            document.getElementById('pipeline-ui').classList.remove('active');
-                        } else if (data.status === 'FAILED') {
-                            clearInterval(pollInterval);
-                            alert(`Generation failed: ${data.message}`);
-                            btn.disabled = false;
-                            btn.textContent = "Generate";
-                        }
-                    } catch (e) {
-                        clearInterval(pollInterval);
-                        console.error("Polling error:", e);
-                    }
-                }, 2000); // Poll every 2 seconds
-
+                const data = await response.json();
+                if (data.task_id) {
+                    pollTask(data.task_id);
+                } else if (data.error) {
+                    throw new Error(data.error);
+                }
             } catch (error) {
-                console.error('Task Error:', error);
-                alert('Could not initialize processing. Please check the URL.');
-                btn.disabled = false;
-                btn.textContent = "Generate";
+                console.error('Pipeline Error:', error);
+                alert('Error: ' + error.message);
+                setLoading(false);
             }
         });
+
+        async function pollTask(taskId) {
+            const loadingText = document.getElementById('loadingText');
+            const blogContent = document.getElementById('blogContent');
+            const blogOutput = document.getElementById('blogOutput');
+
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/task-status/${taskId}/`);
+                    const data = await response.json();
+
+                    if (data.state === 'SUCCESS') {
+                        clearInterval(pollInterval);
+                        blogContent.innerHTML = data.content;
+                        blogOutput.classList.add('active');
+                        setLoading(false);
+                    } else if (data.state === 'FAILURE') {
+                        clearInterval(pollInterval);
+                        alert('Generation failed.');
+                        setLoading(false);
+                    } else {
+                        loadingText.textContent = `${data.step_name}... (${data.progress}%)`;
+                    }
+                } catch (e) {
+                    console.error("Polling error:", e);
+                }
+            }, 2000);
+        }
     </script>
 </body>
 </html>

@@ -37,77 +37,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-    <div class="container">
-        <main class="auth-card card">
-            <header style="text-align: center; margin-bottom: var(--s-8);">
-                <div class="brand" style="justify-content: center; margin-bottom: var(--s-4);">
-                    <div class="brand-icon">
-                        <i data-lucide="layers" style="width:18px; height:18px;"></i>
-                    </div>
-                    <span>ContentFlow</span>
-                </div>
-                <h1>Welcome back</h1>
-                <p class="text-secondary">Sign in to your editorial studio.</p>
-            </header>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-icon" style="color: white; font-weight: bold;">CF</div>
+                <h2>Login</h2>
+                <p>Welcome back to ContentFlow</p>
+            </div>
 
             {% if error_message %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
+            <div class="form-error">
                 {{ error_message }}
             </div>
             {% endif %}
 
             {% if form.errors %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
-                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-                {% for field in form %}
-                    {% for error in field.errors %}{{ error }}{% endfor %}
+            <div class="form-error">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
                 {% endfor %}
             </div>
             {% endif %}
 
-            <form method="POST" class="auth-form" id="loginForm">
+            <form method="POST">
                 {% csrf_token %}
-                <div class="form-field">
+                <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username">
-                    <span class="error-text" id="user-error">Username is required.</span>
+                    <input type="text" id="username" name="username" class="form-input" placeholder="e.g. john_doe" required autocomplete="username">
                 </div>
-                <div class="form-field">
+                <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password">
-                    <span class="error-text" id="pass-error">Password is required.</span>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="********" required autocomplete="current-password">
                 </div>
-                <button type="submit" id="loginBtn">Continue</button>
+                <button type="submit" class="btn btn-primary btn-full">Sign In</button>
             </form>
 
-            <footer style="margin-top: 2rem; text-align: left; font-size: 0.9rem;">
-                <span class="text-secondary">New user?</span> 
-                <a href="/signup" class="accent-text" style="font-weight: 600; text-decoration: none;">Create account</a>
-            </footer>
-        </main>
+            <div class="auth-footer">
+                Don't have an account? <a href="/signup">Sign Up</a>
+            </div>
+        </div>
     </div>
-    <script>
-        lucide.createIcons();
-        
-        const username = document.getElementById('username');
-        const pass = document.getElementById('password');
-        const loginBtn = document.getElementById('loginBtn');
-
-        function validate() {
-            const uValid = username.value.length > 0;
-            const pValid = pass.value.length > 0;
-            
-            username.classList.toggle('invalid', !uValid && username.value.length > 0);
-            pass.classList.toggle('invalid', !pValid && pass.value.length > 0);
-            
-            document.getElementById('user-error').style.display = (!uValid && username.value.length > 0) ? 'block' : 'none';
-            document.getElementById('pass-error').style.display = (!pValid && pass.value.length > 0) ? 'block' : 'none';
-            
-            loginBtn.disabled = !(uValid && pValid);
-        }
-
-        [username, pass].forEach(el => el.addEventListener('input', validate));
-    </script>
+</body>
 </html>

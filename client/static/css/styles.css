@@ -1,163 +1,254 @@
 /* ==========================================================================
-   ContentFlow — The High-End Studio Design System
-   Identity: Premium / Editorial / Sophisticated
+<<<<<<< HEAD
+   ContentFlow — Professional SaaS Design System
+   Architecture: Minimalist / High-Performance / Human-Made
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+=======
+   ContentFlow — Editorial Engine Design System
+   Identity: Grounded / Structural / Intentional
+   Typography: Inter (Product) & Source Serif 4 (Editorial)
+   ========================================================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap');
+>>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
+
+/* ── DESIGN TOKENS (CSS Variables) ── 
+   Using variables ensures semantic consistency across the app. 
+   Changing a token here updates the theme globally. */
 :root {
-  /* Midnight Core */
-  --bg-deep: #0a0b0e;
-  --bg-surface: #14161c;
-  --bg-float: #1c1f26;
+<<<<<<< HEAD
+  /* Surface & Background Colors */
+  --bg-page: #09090b;   /* Deep Slate */
+  --bg-card: #09090b;
+  --bg-input: #111113;
+  --bg-hover: #18181b;
   
-  /* Electric Accents */
-  --accent: #6366f1;         /* Indigo */
-  --accent-glow: rgba(99, 102, 241, 0.15);
-  --accent-soft: rgba(99, 102, 241, 0.08);
+  /* Border System (Precise 1px borders for a premium feel) */
+  --border-dim: #27272a;
+  --border-active: #3f3f46;
+  --border-focus: #2563eb; /* Pro Blue accent */
   
-  /* Borders & Glass */
-  --border-glass: rgba(255, 255, 255, 0.04);
-  --border-soft: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(99, 102, 241, 0.4);
+  /* Typography Scale */
+  --text-main: #fafafa;
+  --text-desc: #a1a1aa;
+  --text-muted: #71717a;
   
-  /* Text */
-  --text-h: #ffffff;
-  --text-p: #9ca3af;
-  --text-d: #6b7280;
+  /* Status Colors */
+  --brand-primary: #2563eb;
+  --state-success: #22c55e;
+  --state-error: #ef4444;
   
-  /* Spacing (8px) */
-  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; 
-  --s-5: 24px; --s-6: 32px; --s-8: 48px; --s-10: 64px;
+  /* Radius Tokens (Smooth rounded corners) */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  /* Animation Timing */
+  --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── BASE STYLES ── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAVIGATION ── */
+=======
+  /* Surface & Background (Deep Slate - Warm Dark) */
+  --bg-base: #121417;        /* Grounded slate */
+  --bg-surface: #1a1d21;     /* Subtle contrast for cards */
+  --bg-surface-soft: #23272e;
+  
+  /* Borders & Dividers (Restrained) */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-muted: rgba(255, 255, 255, 0.12);
+  --border-accent: #3eb0a4;  /* Muted Teal */
+  
+  /* Typography Scale */
+  --text-primary: #e2e8f0;   /* High clarity */
+  --text-secondary: #94a3b8; /* De-emphasized metadata */
+  --text-muted: #64748b;
+  
+  /* Accents (Controlled) */
+  --accent: #3eb0a4;         /* Teal - trustworthy and calm */
+  --accent-soft: rgba(62, 176, 164, 0.1);
+  
+  /* ── 8PX SPACING SYSTEM ── */
+  --s-1: 0.25rem;  /* 4px */
+  --s-2: 0.5rem;   /* 8px */
+  --s-3: 0.75rem;  /* 12px */
+  --s-4: 1rem;     /* 16px */
+  --s-5: 1.5rem;   /* 24px */
+  --s-6: 2rem;     /* 32px */
+  --s-8: 3rem;     /* 48px */
+  --s-10: 4rem;    /* 64px */
+  
+  --radius-product: 4px;     /* Professional sharp edges */
+  --radius-card: 6px;
+}
+
+/* ── BASE RESET ── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--bg-deep);
-  color: var(--text-p);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, .brand { font-family: 'Outfit', sans-serif; color: var(--text-h); }
-
-/* ── LAYOUT ── */
+/* ── LAYOUT STRUCTURE ── */
 .container {
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 0 var(--s-6);
+  padding: 0 2rem;
 }
 
-section { margin-bottom: var(--s-10); }
+section { margin-bottom: 5rem; } /* Varied spacing */
 
-/* ── NAVIGATION ── */
+/* ── NAVIGATION (Professional Header) ── */
+>>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
 .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--s-5) var(--s-10);
-  background: rgba(10, 11, 14, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-glass);
+<<<<<<< HEAD
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.brand-icon {
+  width: 24px;
+  height: 24px;
+  background: var(--brand-primary);
+  border-radius: var(--radius-xs);
+=======
+  padding: var(--s-4) var(--s-6);
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.brand {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.nav-group {
   display: flex;
   align-items: center;
-  gap: var(--s-2);
+  gap: var(--s-6);
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, var(--accent), #8b5cf6);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.nav-group { display: flex; align-items: center; gap: var(--s-8); }
 .nav-link {
-  color: var(--text-d);
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: color 0.2s ease;
 }
-.nav-link:hover { color: var(--text-h); }
+
+.nav-link:hover { color: var(--text-primary); }
 
 .user-menu {
   display: flex;
   align-items: center;
   gap: var(--s-3);
   padding-left: var(--s-5);
-  border-left: 1px solid var(--border-glass);
+  border-left: 1px solid var(--border-subtle);
 }
 
 .user-badge {
-  width: 34px;
-  height: 34px;
-  background: var(--accent-soft);
-  border: 1px solid var(--border-active);
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  background: var(--bg-surface-soft);
+  border-radius: 50%;
+>>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
-  font-weight: 700;
+  font-size: 0.75rem;
+<<<<<<< HEAD
+  color: #fff;
 }
 
-/* ── CARDS & INPUTS ── */
+/* ── COMPONENTS: CARDS & BUTTONS ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+=======
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid var(--border-muted);
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-dot { color: var(--accent); }
+
+/* ── PRODUCT COMPONENTS ── */
 .card {
   background: var(--bg-surface);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  padding: var(--s-8);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-card);
+  padding: 2rem;
+  transition: border-color 0.2s ease;
 }
 
-.hero-section { text-align: center; margin-top: var(--s-10); }
-.hero-section h1 { font-size: 3.5rem; margin-bottom: var(--s-3); letter-spacing: -0.04em; }
+.card:hover { border-color: var(--accent); }
 
-.input-container {
+/* Left-aligned by default */
+.input-section {
   max-width: 600px;
-  margin: var(--s-8) auto;
-  position: relative;
+  text-align: left;
 }
 
 .input-group {
   display: flex;
-  background: var(--bg-float);
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  padding: var(--s-2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 0 0 var(--accent-glow);
-}
-
-.input-group:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 20px var(--accent-glow);
+  gap: 0.5rem;
+  background: var(--bg-surface-soft);
+  padding: 0.4rem;
+  border-radius: var(--radius-product);
+  border: 1px solid var(--border-muted);
 }
 
 input {
   flex: 1;
   background: transparent;
   border: none;
-  color: var(--text-h);
-  padding: var(--s-4);
+  color: #fff;
+  padding: 0.75rem 1rem;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 input:focus { outline: none; }
@@ -166,115 +257,213 @@ button {
   background: var(--accent);
   color: #fff;
   border: none;
-  padding: 0 var(--s-6);
-  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-product);
+>>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+<<<<<<< HEAD
+  transition: all var(--ease-fast);
 }
 
-button:hover { transform: translateY(-1px); background: #4f46e5; }
-button:active { transform: translateY(0); }
-
-/* ── AUTH FORMS ── */
-.auth-card {
-  max-width: 440px;
-  margin: 10vh auto;
-  border-radius: 24px;
+.btn-primary {
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
 }
 
-.form-field { margin-bottom: var(--s-5); }
-.form-field label { 
-  display: block; 
-  font-size: 0.75rem; 
-  font-weight: 600; 
-  text-transform: uppercase; 
-  letter-spacing: 0.05em; 
-  margin-bottom: var(--s-2);
-  color: var(--text-d);
+/* ── INTERACTIVE STATES: LOADING ── */
+.loading-container {
+  display: none;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-md);
+  align-items: center;
+  gap: 1rem;
 }
 
-.form-field input {
-  width: 100%;
-  background: var(--bg-float);
-  border: 1px solid var(--border-soft);
-  border-radius: 10px;
-  padding: var(--s-4);
+.loading-container.active { display: flex; }
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-dim);
+  border-top-color: var(--brand-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
 }
 
-/* ── PIPELINE & PROGRESS ── */
-.pipeline-ui {
-  margin-top: var(--s-10);
-  background: var(--bg-surface);
-  border-radius: 20px;
-  padding: var(--s-6);
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.step-row {
+/* ── GENERATED CONTENT ──
+   Styles for outputted AI articles to ensure clean readability. */
+.blog-content {
+  border-top: 1px solid var(--border-dim);
+  padding-top: 1.5rem;
+  line-height: 1.7;
+}
+
+.blog-content h1, 
+.blog-content h2 { margin: 2rem 0 1rem; color: var(--text-main); }
+
+/* ── TOAST NOTIFICATIONS ── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.25rem;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: var(--radius-md);
+  transform: translateY(150%);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast.show { transform: translateY(0); }
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .hero-title { font-size: 1.75rem; }
+  .input-group { flex-direction: column; }
+=======
+  transition: opacity 0.2s ease;
+}
+
+button:hover { opacity: 0.9; }
+
+/* ── PIPELINE UI (Visible System) ── */
+.pipeline-container {
+  display: none;
+  margin-top: 2.5rem;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pipeline-container.active { display: flex; }
+
+.pipeline-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.pipeline-step.active { opacity: 1; }
+
+.step-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border-muted);
   display: flex;
   align-items: center;
-  gap: var(--s-4);
-  padding: var(--s-3) 0;
-  opacity: 0.3;
+  justify-content: center;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
 }
 
-.step-row.active { opacity: 1; }
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-d);
+.pipeline-step.active .step-marker {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
-.step-row.active .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.step-details { display: flex; flex-direction: column; }
 
-/* ── EDITORIAL ── */
-.article-container {
-  background: var(--bg-surface);
-  border-radius: 24px;
-  padding: var(--s-10);
-  margin-top: var(--s-10);
+.step-label { font-weight: 600; font-size: 0.9rem; }
+.step-log { font-size: 0.8rem; color: var(--text-secondary); }
+
+/* ── EDITORIAL CONTENT (The Publication Feel) ── */
+.article-header {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.article-meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .article-body {
-  font-family: 'Lora', serif;
-  font-size: 1.25rem;
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.15rem;
+  color: var(--text-primary);
   line-height: 1.8;
-  color: #e5e7eb;
+  max-width: 680px; /* Optimal reading width */
 }
 
-.article-body h2 { font-size: 2rem; margin: var(--s-8) 0 var(--s-4); }
-
-/* ── ARCHIVE GRID ── */
-.archive-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--s-6);
+.article-body h1, .article-body h2, .article-body h3 {
+  font-family: 'Inter', sans-serif;
+  margin: 2.5rem 0 1rem;
+  letter-spacing: -0.01em;
 }
 
-.article-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  padding: var(--s-6);
-  transition: all 0.3s;
+.article-body p { margin-bottom: 1.5rem; }
+
+/* ── AUTH PAGES ── */
+.auth-container {
+  max-width: 400px;
+  margin: 10vh auto;
 }
 
-.article-card:hover { 
-  transform: translateY(-4px); 
-  border-color: var(--border-active);
-  background: var(--bg-float);
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-/* ── RESPONSIVE ── */
+.form-field { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-field label { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
+.form-field input { 
+  background: var(--bg-surface-soft); 
+  border: 1px solid var(--border-muted); 
+  border-radius: var(--radius-product);
+}
+
+/* ── UTILS ── */
+.accent-text { color: var(--accent); }
+
+/* ── FORM VALIDATION STATES ── */
+.error-text {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: var(--s-1);
+  display: none; /* Shown via JS */
+}
+
+input.invalid {
+  border-color: #ef4444 !important;
+}
+
+input.valid {
+  border-color: var(--accent) !important;
+}
+
+/* ── RESPONSIVE DESIGN ── */
 @media (max-width: 768px) {
-  .hero-section h1 { font-size: 2.25rem; }
-  .navbar { padding: var(--s-4) var(--s-6); }
-  .nav-group { display: none; }
   .container { padding: 0 var(--s-4); }
+  .navbar { padding: var(--s-4); }
+  .nav-group { gap: var(--s-4); }
+  .user-menu { display: none; } /* Simplify on mobile */
+  
+  .input-group { flex-direction: column; padding: var(--s-2); }
+  button { width: 100%; }
+  
+  section { margin-bottom: var(--s-8); }
+  .article-body { font-size: 1.05rem; }
 }
 
 @media (max-width: 480px) {
   .brand span { display: none; } /* Hide text on very small screens */
+>>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
 }

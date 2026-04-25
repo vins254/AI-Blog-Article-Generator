@@ -33,74 +33,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archive — ContentFlow</title>
+    <title>My Articles — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="nav-group">
-            <div class="brand">
-                <div class="brand-icon">
-                    <i data-lucide="layers" style="width:18px; height:18px;"></i>
-                </div>
-                <span>ContentFlow</span>
-            </div>
-            <a href="/" class="nav-link">Dashboard</a>
-            <a href="/blog-list" class="nav-link">Archive</a>
-        </div>
-        <div class="nav-group">
-            <div class="user-menu">
-                <span class="nav-link" style="opacity: 0.5;">{{ user.username }}</span>
-                <div class="user-badge">{{ user.username|slice:":1"|upper }}</div>
-            </div>
-            <a href="/logout" class="nav-link">Logout</a>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
+        </a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/" class="btn-nav btn-nav-outline">New Article</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <div class="container">
-        <main class="dashboard">
-            <header class="section-header">
-                <span class="badge">{{ blog_articles|length }} record{{ blog_articles|length|pluralize }}</span>
-                <h1>Editorial Archive</h1>
-                <p class="text-secondary">Historically processed content and synthesized articles.</p>
-            </header>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <div class="blog-list-header">
+                <h2>Article Archive</h2>
+                <span class="blog-count">{{ blog_articles|length }} record{{ blog_articles|length|pluralize }}</span>
+            </div>
 
-            <!-- Archive Grid -->
-        <section class="archive-grid">
-            {% for article in blog_articles %}
-                <article class="article-card">
-                    <div style="font-size: 0.75rem; color: var(--text-d); margin-bottom: var(--s-2);">
-                        {{ article.created_at|date:"M d, Y" }}
+            <div>
+                {% for article in blog_articles reversed %}
+                <a href="/blog-details/{{ article.id }}/" class="blog-item">
+                    <div class="blog-item-title">{{ article.youtube_title }}</div>
+                    <div class="blog-item-preview">{{ article.generated_content|truncatechars:120 }}</div>
+                    <div class="blog-item-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="meta-tag">Processed</span>
+                            <span>{{ article.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <form action="/delete-blog/{{ article.id }}/" method="GET" style="display:inline;">
+                            <button type="submit" 
+                                    style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer;"
+                                    onclick="return confirm('Permanently delete this record?')">
+                                Delete
+                            </button>
+                        </form>
                     </div>
-                    <h2 style="font-size: 1.25rem; margin-bottom: var(--s-4); line-height: 1.3;">
-                        {{ article.youtube_title }}
-                    </h2>
-                    
-                    <div style="display: flex; gap: var(--s-4); align-items: center; margin-top: var(--s-6);">
-                        <a href="/blog-details/{{ article.id }}/" class="nav-link" style="color: var(--accent); font-weight: 600;">
-                            Read
-                        </a>
-                        <a href="/delete-blog/{{ article.id }}/" 
-                           class="nav-link" 
-                           style="color: #ef4444;"
-                           onclick="return confirm('Permanently remove this publication?')">
-                            Remove
-                        </a>
-                    </div>
-                </article>
-            {% empty %}
-                <div class="card" style="grid-column: 1/-1; text-align: center; border-style: dashed;">
-                    <p class="text-secondary">No publications found in your archive.</p>
-                    <a href="/" class="accent-text" style="display: block; margin-top: 1rem; text-decoration: none; font-weight: 600;">Create your first →</a>
+                </a>
+                {% empty %}
+                <div class="empty-state">
+                    <h3>No records found</h3>
+                    <p>Process your first video link to generate an article.</p>
+                    <a href="/" class="btn btn-primary">Process New Content</a>
                 </div>
-            {% endfor %}
-        </section>
-        </main>
-    </div>
-
-    <script>lucide.createIcons();</script>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
