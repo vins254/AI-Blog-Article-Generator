@@ -35,43 +35,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ blog_article_detail.youtube_title }} — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        .article-container { font-family: 'Source Serif 4', serif; line-height: 1.8; color: #333; }
-    </style>
 </head>
 <body>
-    <!-- ── NAVIGATION (Refined) ── -->
+    <!-- Navbar -->
     <nav class="navbar">
-        <a href="/" class="brand">
-            ContentFlow <span class="brand-badge">App</span>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
         </a>
-        <div class="nav-links">
-            <a href="/" class="nav-link">Dashboard</a>
-            <a href="/blog-list" class="nav-link">Archive</a>
-            <a href="/logout" class="nav-link">Logout</a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/blog-list" class="btn-nav btn-nav-outline">Archive</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
     <!-- Main Content -->
     <main class="main-content">
-        <div class="container">
-            <article class="card article-container">
-                <header style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-soft); padding-bottom: 1rem;">
-                    <h1 style="font-size: 2rem; margin-top: 0;">{{ blog_article_detail.youtube_title }}</h1>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                        Published {{ blog_article_detail.created_at|date:"F d, Y" }}
-                    </div>
-                </header>
-                
-                <div id="blogContent">
-                    {{ blog_article_detail.generated_content|linebreaksbr }}
-                </div>
+        <div class="card">
+            <!-- Header -->
+            <div class="blog-detail-header" style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-soft); padding-bottom: 1.5rem;">
+                <a href="/blog-list" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">← Back to Archive</a>
+                <h1 style="margin-top: 1rem;">{{ blog_article_detail.youtube_title }}</h1>
+            </div>
 
-                <footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-soft);">
-                    <a href="/blog-list" class="btn btn-ghost" style="padding-left: 0;">← Back to Archive</a>
-                </footer>
-            </article>
+            <!-- Article Body -->
+            <div class="blog-content">
+                {{ blog_article_detail.generated_content|safe }}
+            </div>
+            
+            <footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-soft);">
+                <a href="{{ blog_article_detail.youtube_link }}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">
+                    View Original Video ↗
+                </a>
+            </footer>
         </div>
     </main>
 

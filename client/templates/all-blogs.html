@@ -37,47 +37,56 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <!-- ── NAVIGATION (Refined) ── -->
+    <!-- Navbar -->
     <nav class="navbar">
-        <a href="/" class="brand">
-            ContentFlow <span class="brand-badge">App</span>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
+            ContentFlow
         </a>
-        <div class="nav-links">
-            <a href="/" class="nav-link">Dashboard</a>
-            <a href="/blog-list" class="nav-link" style="color: var(--text-primary);">Archive</a>
-            <a href="/logout" class="nav-link">Logout</a>
+        <div class="navbar-links">
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/" class="btn-nav btn-nav-outline">New Article</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <div class="container">
-        <h1 style="font-size: 1.5rem; margin-bottom: 2rem;">Archive</h1>
-        
-        <div class="blog-list">
-            {% for article in blog_articles %}
-            <div class="blog-item">
-                <a href="/blog-details/{{ article.id }}/" style="text-decoration: none;">
-                    <div class="blog-title">{{ article.youtube_title }}</div>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px;">
-                        {{ article.generated_content|striptags|truncatechars:140 }}
-                    </p>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <div class="blog-list-header">
+                <h2>Article Archive</h2>
+                <span class="blog-count">{{ blog_articles|length }} record{{ blog_articles|length|pluralize }}</span>
+            </div>
+
+            <div>
+                {% for article in blog_articles reversed %}
+                <a href="/blog-details/{{ article.id }}/" class="blog-item">
+                    <div class="blog-item-title">{{ article.youtube_title }}</div>
+                    <div class="blog-item-preview">{{ article.generated_content|truncatechars:120 }}</div>
+                    <div class="blog-item-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="meta-tag">Processed</span>
+                            <span>{{ article.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <form action="/delete-blog/{{ article.id }}/" method="GET" style="display:inline;">
+                            <button type="submit" 
+                                    style="background:none; border:none; color:#f85149; font-size:0.8rem; cursor:pointer;"
+                                    onclick="return confirm('Permanently delete this record?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </a>
-                <div class="blog-meta" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                    <span>Created {{ article.created_at|date:"M d, Y" }}</span>
-                    <a href="/delete-blog/{{ article.id }}/" 
-                       class="btn btn-ghost" 
-                       style="color: var(--danger); font-size: 0.8rem;"
-                       onclick="return confirm('Delete this publication?')">
-                        Delete
-                    </a>
+                {% empty %}
+                <div class="empty-state">
+                    <h3>No records found</h3>
+                    <p>Process your first video link to generate an article.</p>
+                    <a href="/" class="btn btn-primary">Process New Content</a>
                 </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div class="card" style="text-align: center; border-style: dashed;">
-                <p style="color: var(--text-muted);">No publications found.</p>
-            </div>
-            {% endfor %}
         </div>
-    </div>
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
