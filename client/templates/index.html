@@ -48,60 +48,42 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <!-- ── NAVIGATION ── -->
+    <!-- ── NAVIGATION (Refined) ── -->
     <nav class="navbar">
-        <a href="/" class="navbar-brand">
-            <div class="brand-icon">CF</div>
-            ContentFlow
+        <a href="/" class="brand">
+            ContentFlow <span class="brand-badge">App</span>
         </a>
-        <div class="navbar-links">
-            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
-            <a href="/blog-list" class="btn-nav btn-nav-outline">My Articles</a>
-            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link" style="color: var(--text-primary);">Dashboard</a>
+            <a href="/blog-list" class="nav-link">Archive</a>
+            <a href="/logout" class="nav-link">Logout</a>
         </div>
     </nav>
 
-    <!-- ── MAIN DASHBOARD ── -->
-    <main class="main-content">
-        <div class="card">
-            <div class="hero-section">
-                <h1 class="hero-title">Video to Article Automation</h1>
-                <p class="hero-description">
-                    Provide a YouTube link to process the video transcript 
-                    and generate a structured, professional article in real-time.
-                </p>
-            </div>
+    <div class="container">
+        <main>
+            <div class="card">
+                <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Generate Article</h1>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Enter a YouTube URL to synthesize an editorial publication.</p>
+                
+                <div class="form-group">
+                    <input type="url" id="youtubeLink" class="input-field" placeholder="https://www.youtube.com/watch?v=..." required>
+                </div>
+                
+                <button id="generateBlogButton" class="btn btn-primary">
+                    Create Publication
+                </button>
 
-            <!-- YouTube URL Submission -->
-            <div class="input-section">
-                <h3>Video Source</h3>
-                <div class="input-group" id="inputGroup">
-                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
-                    <button id="generateBlogButton" class="btn btn-primary">
-                        Generate Article
-                    </button>
+                <div id="loading-container" class="loading-box">
+                    <span id="loadingText">Analyzing source...</span>
                 </div>
             </div>
 
-            <!-- REAL-TIME PROGRESS FEEDBACK
-                 This section is hidden by default and activated via JavaScript
-                 when a generation request begins. -->
-            <div id="loading-container" class="loading-container">
-                <div class="spinner"></div>
-                <span class="loading-text" id="loadingText">Connecting to source...</span>
+            <div id="blogOutput" class="card article-container" style="display: none; margin-top: 2rem;">
+                <div id="blogContent"></div>
             </div>
-
-            <!-- ARTICLE OUTPUT
-                 Dynamic container that expands to show the AI-generated results. -->
-            <div id="blogOutput" class="blog-output">
-                <div class="blog-output-header">
-                    <div class="status-dot"></div>
-                    Processing Complete
-                </div>
-                <div id="blogContent" class="blog-content"></div>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <footer class="footer">
         &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.

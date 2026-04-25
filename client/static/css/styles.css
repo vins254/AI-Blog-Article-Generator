@@ -1,469 +1,197 @@
 /* ==========================================================================
-<<<<<<< HEAD
-   ContentFlow — Professional SaaS Design System
-   Architecture: Minimalist / High-Performance / Human-Made
-   ========================================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-=======
-   ContentFlow — Editorial Engine Design System
-   Identity: Grounded / Structural / Intentional
-   Typography: Inter (Product) & Source Serif 4 (Editorial)
+   ContentFlow — Refined Editorial Design System
+   Identity: Minimalist / High-Performance / Professional
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap');
->>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
 
-/* ── DESIGN TOKENS (CSS Variables) ── 
-   Using variables ensures semantic consistency across the app. 
-   Changing a token here updates the theme globally. */
 :root {
-<<<<<<< HEAD
-  /* Surface & Background Colors */
-  --bg-page: #09090b;   /* Deep Slate */
-  --bg-card: #09090b;
-  --bg-input: #111113;
-  --bg-hover: #18181b;
+  /* Backgrounds */
+  --bg-main: #0d1117;        /* Deep Slate Blue (almost black) */
+  --bg-secondary: #010409;   /* Dark Navy */
+  --bg-card: #161b22;        /* Charcoal Gray */
+  --border-soft: #30363d;    /* Soft Dark Gray */
   
-  /* Border System (Precise 1px borders for a premium feel) */
-  --border-dim: #27272a;
-  --border-active: #3f3f46;
-  --border-focus: #2563eb; /* Pro Blue accent */
+  /* Text Palette */
+  --text-primary: #f0f6fc;   /* Soft Off-white */
+  --text-secondary: #8b949e; /* Muted Gray */
+  --text-muted: #484f58;     /* Faded Gray */
   
-  /* Typography Scale */
-  --text-main: #fafafa;
-  --text-desc: #a1a1aa;
-  --text-muted: #71717a;
+  /* Accent */
+  --accent: #58a6ff;         /* Calm Medium Blue */
+  --accent-hover: #1f6feb;
+  --danger: #f85149;
   
-  /* Status Colors */
-  --brand-primary: #2563eb;
-  --state-success: #22c55e;
-  --state-error: #ef4444;
-  
-  /* Radius Tokens (Smooth rounded corners) */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  
-  /* Animation Timing */
-  --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Spacing System */
+  --s-1: 4px; --s-2: 8px; --s-4: 16px; --s-6: 24px; --s-8: 32px;
+  --radius: 6px;
 }
 
-/* ── BASE STYLES ── */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'Inter', -apple-system, system-ui, sans-serif;
-  background-color: var(--bg-page);
-  color: var(--text-main);
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── NAVIGATION ── */
-=======
-  /* Surface & Background (Deep Slate - Warm Dark) */
-  --bg-base: #121417;        /* Grounded slate */
-  --bg-surface: #1a1d21;     /* Subtle contrast for cards */
-  --bg-surface-soft: #23272e;
-  
-  /* Borders & Dividers (Restrained) */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-muted: rgba(255, 255, 255, 0.12);
-  --border-accent: #3eb0a4;  /* Muted Teal */
-  
-  /* Typography Scale */
-  --text-primary: #e2e8f0;   /* High clarity */
-  --text-secondary: #94a3b8; /* De-emphasized metadata */
-  --text-muted: #64748b;
-  
-  /* Accents (Controlled) */
-  --accent: #3eb0a4;         /* Teal - trustworthy and calm */
-  --accent-soft: rgba(62, 176, 164, 0.1);
-  
-  /* ── 8PX SPACING SYSTEM ── */
-  --s-1: 0.25rem;  /* 4px */
-  --s-2: 0.5rem;   /* 8px */
-  --s-3: 0.75rem;  /* 12px */
-  --s-4: 1rem;     /* 16px */
-  --s-5: 1.5rem;   /* 24px */
-  --s-6: 2rem;     /* 32px */
-  --s-8: 3rem;     /* 48px */
-  --s-10: 4rem;    /* 64px */
-  
-  --radius-product: 4px;     /* Professional sharp edges */
-  --radius-card: 6px;
-}
-
-/* ── BASE RESET ── */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── LAYOUT STRUCTURE ── */
+/* ── LAYOUT ── */
 .container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: var(--s-8) var(--s-4);
 }
 
-section { margin-bottom: 5rem; } /* Varied spacing */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: var(--s-6);
+}
 
-/* ── NAVIGATION (Professional Header) ── */
->>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
+/* ── NAVIGATION ── */
 .navbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
-<<<<<<< HEAD
-  padding: 0.75rem 1.5rem;
-  background: var(--bg-page);
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.brand-icon {
-  width: 24px;
-  height: 24px;
-  background: var(--brand-primary);
-  border-radius: var(--radius-xs);
-=======
   padding: var(--s-4) var(--s-6);
-  background: var(--bg-base);
-  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-main);
+  border-bottom: 1px solid var(--border-soft);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.nav-group {
+.brand {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
   display: flex;
   align-items: center;
-  gap: var(--s-6);
+  gap: var(--s-2);
 }
 
+.brand-badge {
+  background-color: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.nav-links { display: flex; gap: var(--s-4); }
 .nav-link {
   color: var(--text-secondary);
   text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+.nav-link:hover { color: var(--accent); }
+
+/* ── FORMS ── */
+.form-group { margin-bottom: var(--s-4); }
+.form-label {
+  display: block;
   font-size: 0.85rem;
   font-weight: 500;
-  transition: color 0.2s ease;
+  margin-bottom: var(--s-1);
 }
 
-.nav-link:hover { color: var(--text-primary); }
-
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  padding-left: var(--s-5);
-  border-left: 1px solid var(--border-subtle);
-}
-
-.user-badge {
-  width: 32px;
-  height: 32px;
-  background: var(--bg-surface-soft);
-  border-radius: 50%;
->>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-<<<<<<< HEAD
-  color: #fff;
-}
-
-/* ── COMPONENTS: CARDS & BUTTONS ── */
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-=======
-  font-weight: 700;
-  color: var(--accent);
-  border: 1px solid var(--border-muted);
-}
-
-.brand {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.brand-dot { color: var(--accent); }
-
-/* ── PRODUCT COMPONENTS ── */
-.card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-muted);
-  border-radius: var(--radius-card);
-  padding: 2rem;
-  transition: border-color 0.2s ease;
-}
-
-.card:hover { border-color: var(--accent); }
-
-/* Left-aligned by default */
-.input-section {
-  max-width: 600px;
-  text-align: left;
-}
-
-.input-group {
-  display: flex;
-  gap: 0.5rem;
-  background: var(--bg-surface-soft);
-  padding: 0.4rem;
-  border-radius: var(--radius-product);
-  border: 1px solid var(--border-muted);
-}
-
-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: #fff;
-  padding: 0.75rem 1rem;
+.input-field {
+  width: 100%;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  color: var(--text-primary);
   font-family: inherit;
   font-size: 0.95rem;
 }
 
-input:focus { outline: none; }
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
 
-button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-product);
->>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
-  font-weight: 600;
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: var(--radius);
   font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-<<<<<<< HEAD
-  transition: all var(--ease-fast);
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  text-decoration: none;
 }
 
 .btn-primary {
-  background: var(--brand-primary);
+  background-color: var(--accent);
   color: #fff;
-  border: none;
 }
+.btn-primary:hover { background-color: var(--accent-hover); }
 
-/* ── INTERACTIVE STATES: LOADING ── */
-.loading-container {
-  display: none;
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: var(--bg-hover);
-  border-radius: var(--radius-md);
-  align-items: center;
-  gap: 1rem;
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
 }
+.btn-ghost:hover { color: var(--text-primary); }
 
-.loading-container.active { display: flex; }
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border-dim);
-  border-top-color: var(--brand-primary);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--border-soft);
 }
+.btn-danger:hover { background-color: var(--danger); color: #fff; border-color: var(--danger); }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ── GENERATED CONTENT ──
-   Styles for outputted AI articles to ensure clean readability. */
-.blog-content {
-  border-top: 1px solid var(--border-dim);
-  padding-top: 1.5rem;
+/* ── ARTICLE CONTENT ── */
+.article-container {
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.15rem;
   line-height: 1.7;
 }
 
-.blog-content h1, 
-.blog-content h2 { margin: 2rem 0 1rem; color: var(--text-main); }
-
-/* ── TOAST NOTIFICATIONS ── */
-.toast {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  padding: 0.75rem 1.25rem;
-  background: #18181b;
-  border: 1px solid #27272a;
-  border-radius: var(--radius-md);
-  transform: translateY(150%);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.article-container h1, .article-container h2, .article-container h3 {
+  font-family: 'Inter', sans-serif;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.toast.show { transform: translateY(0); }
-
-/* Responsive Adjustments */
-@media (max-width: 640px) {
-  .hero-title { font-size: 1.75rem; }
-  .input-group { flex-direction: column; }
-=======
-  transition: opacity 0.2s ease;
+/* ── LISTS ── */
+.blog-list { display: flex; flex-direction: column; gap: var(--s-4); }
+.blog-item {
+  display: block;
+  padding: var(--s-4);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background 0.2s;
 }
+.blog-item:hover { background-color: rgba(255, 255, 255, 0.02); border-color: var(--text-muted); }
 
-button:hover { opacity: 0.9; }
+.blog-title { color: var(--accent); font-weight: 600; font-size: 1.1rem; }
+.blog-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: var(--s-1); }
 
-/* ── PIPELINE UI (Visible System) ── */
-.pipeline-container {
+/* ── LOADING ── */
+.loading-box {
   display: none;
-  margin-top: 2.5rem;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.pipeline-container.active { display: flex; }
-
-.pipeline-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  opacity: 0.4;
-  transition: opacity 0.3s ease;
-}
-
-.pipeline-step.active { opacity: 1; }
-
-.step-marker {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid var(--border-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  flex-shrink: 0;
-  margin-top: 0.2rem;
-}
-
-.pipeline-step.active .step-marker {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+  padding: var(--s-4);
+  background-color: rgba(88, 166, 255, 0.05);
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius);
+  margin-top: var(--s-4);
+  text-align: center;
+  font-size: 0.9rem;
   color: var(--accent);
 }
+.loading-box.active { display: block; }
 
-.step-details { display: flex; flex-direction: column; }
-
-.step-label { font-weight: 600; font-size: 0.9rem; }
-.step-log { font-size: 0.8rem; color: var(--text-secondary); }
-
-/* ── EDITORIAL CONTENT (The Publication Feel) ── */
-.article-header {
-  margin-bottom: 3rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.article-meta {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.article-body {
-  font-family: 'Source Serif 4', serif;
-  font-size: 1.15rem;
-  color: var(--text-primary);
-  line-height: 1.8;
-  max-width: 680px; /* Optimal reading width */
-}
-
-.article-body h1, .article-body h2, .article-body h3 {
-  font-family: 'Inter', sans-serif;
-  margin: 2.5rem 0 1rem;
-  letter-spacing: -0.01em;
-}
-
-.article-body p { margin-bottom: 1.5rem; }
-
-/* ── AUTH PAGES ── */
-.auth-container {
-  max-width: 400px;
-  margin: 10vh auto;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-field { display: flex; flex-direction: column; gap: 0.5rem; }
-.form-field label { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
-.form-field input { 
-  background: var(--bg-surface-soft); 
-  border: 1px solid var(--border-muted); 
-  border-radius: var(--radius-product);
-}
-
-/* ── UTILS ── */
-.accent-text { color: var(--accent); }
-
-/* ── FORM VALIDATION STATES ── */
-.error-text {
-  font-size: 0.75rem;
-  color: #ef4444;
-  margin-top: var(--s-1);
-  display: none; /* Shown via JS */
-}
-
-input.invalid {
-  border-color: #ef4444 !important;
-}
-
-input.valid {
-  border-color: var(--accent) !important;
-}
-
-/* ── RESPONSIVE DESIGN ── */
 @media (max-width: 768px) {
-  .container { padding: 0 var(--s-4); }
-  .navbar { padding: var(--s-4); }
-  .nav-group { gap: var(--s-4); }
-  .user-menu { display: none; } /* Simplify on mobile */
-  
-  .input-group { flex-direction: column; padding: var(--s-2); }
-  button { width: 100%; }
-  
-  section { margin-bottom: var(--s-8); }
-  .article-body { font-size: 1.05rem; }
-}
-
-@media (max-width: 480px) {
-  .brand span { display: none; } /* Hide text on very small screens */
->>>>>>> parent of 03d29fb (design: complete overhaul to 'High-End Studio' aesthetic)
+  .container { padding: var(--s-4); }
+  .navbar { padding: var(--s-3); }
 }
