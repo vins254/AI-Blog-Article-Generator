@@ -165,6 +165,12 @@ WSGI_APPLICATION = 'ai_blog_app.wsgi.application'
 # Locally, falls back to SQLite so no setup is needed for development.
 _database_url = os.environ.get('DATABASE_URL')
 if _database_url:
+    # Supabase URLs often include query params like ?pgbouncer=true that
+    # psycopg2 doesn't understand and will crash on. We strip everything
+    # after the '?' to keep only the core connection string.
+    if '?' in _database_url:
+        _database_url = _database_url.split('?')[0]
+
     DATABASES = {
         'default': dj_database_url.config(
             default=_database_url,
