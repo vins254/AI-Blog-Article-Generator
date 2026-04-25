@@ -240,79 +240,66 @@
             if (!youtubeLink) return;
 
             btn.disabled = true;
-            btn.textContent = "Running...";
+            btn.textContent = "Processing...";
             document.getElementById('blogOutput').style.display = 'none';
             resetPipeline();
 
             try {
+                // 1. Trigger the background task
                 const response = await fetch('/generate-blog', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                     body: JSON.stringify({ link: youtubeLink })
                 });
 
-                if (!response.ok) throw new Error('Server error');
+                if (!response.ok) throw new Error('Failed to start generation');
+                const { task_id } = await response.json();
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
+                // 2. Poll for status updates
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusRes = await fetch(`/task-status/${task_id}/`);
+                        if (!statusRes.ok) throw new Error('Status check failed');
+                        
+                        const data = await statusRes.json();
+                        
+                        // Update UI based on progress
+                        const step = Math.min(4, Math.floor(data.progress / 25) + 1);
+                        updatePipeline(step, data.message);
+                        document.getElementById('progress-inner').style.width = `${data.progress}%`;
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop();
-
-                    for (const line of lines) {
-                        if (!line.trim()) continue;
-                        try {
-                            const data = JSON.parse(line);
-                            if (data.error) throw new Error(data.error);
-
-                            if (data.step >= 1 && data.step <= 4) {
-                                // Humanize labels based on backend step
-                                let humanMsg = "";
-                                switch(data.step) {
-                                    case 1: humanMsg = "Identifying video source..."; break;
-                                    case 2: humanMsg = "Pulling audio from stream..."; break;
-                                    case 3: humanMsg = "Turning speech into text..."; break;
-                                    case 4: humanMsg = "Structuring article draft..."; break;
-                                }
-                                updatePipeline(data.step, humanMsg);
-                            }
-
-                            if (data.step === 5 && data.content) {
-                                let html = data.content
-                                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-                                    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-                                    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-                                    .replace(/^- (.*$)/gm, '<li>$1</li>')
-                                    .replace(/\n\n/g, '</p><p>')
-                                    .replace(/\n/g, '<br>');
-                                
-                                const finalHtml = '<p>' + html + '</p>';
-                                const title = data.title || "Untitled Article";
-                                
-                                renderArticle(title, finalHtml, youtubeLink);
-                                localStorage.setItem('cf_last_content', JSON.stringify({
-                                    title: title,
-                                    html: finalHtml,
-                                    url: youtubeLink
-                                }));
-                                document.getElementById('pipeline-ui').classList.remove('active');
-                            }
-                        } catch (e) { console.error("Stream parse error:", e); }
+                        if (data.status === 'COMPLETED') {
+                            clearInterval(pollInterval);
+                            
+                            // Render final article
+                            renderArticle(data.title, data.content, youtubeLink);
+                            localStorage.setItem('cf_last_content', JSON.stringify({
+                                title: data.title,
+                                html: data.content,
+                                url: youtubeLink
+                            }));
+                            
+                            btn.disabled = false;
+                            btn.textContent = "Generate";
+                            document.getElementById('pipeline-ui').classList.remove('active');
+                        } else if (data.status === 'FAILED') {
+                            clearInterval(pollInterval);
+                            alert(`Generation failed: ${data.message}`);
+                            btn.disabled = false;
+                            btn.textContent = "Generate";
+                        }
+                    } catch (e) {
+                        clearInterval(pollInterval);
+                        console.error("Polling error:", e);
                     }
-                }
+                }, 2000); // Poll every 2 seconds
+
             } catch (error) {
-                console.error('Pipeline Error:', error);
-                alert('Generation failed. Please verify the URL.');
+                console.error('Task Error:', error);
+                alert('Could not initialize processing. Please check the URL.');
+                btn.disabled = false;
+                btn.textContent = "Generate";
             }
-            btn.disabled = false;
-            btn.textContent = "Generate";
         });
     </script>
 </body>

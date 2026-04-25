@@ -5,14 +5,57 @@ import json
 import yt_dlp
 import assemblyai as aai
 from django.conf import settings
-from .models import BlogPost
+from .models import BlogPost, TaskProgress
 
 class BlogService:
     """
     A service layer that handles the core business logic of the application.
-    By separating this from views.py, we make the code more testable, 
-    reusable, and maintainable.
+    Now supports background task progress tracking.
     """
+
+    @staticmethod
+    def _update_progress(task_id, progress, message, status='RUNNING', blog_post=None):
+        if task_id:
+            TaskProgress.objects.filter(task_id=task_id).update(
+                progress=progress, 
+                message=message, 
+                status=status,
+                blog_post=blog_post
+            )
+
+    @classmethod
+    def process_video_to_blog(cls, user, link, task_id=None):
+        """
+        Master method intended for background execution.
+        """
+        try:
+            cls._update_progress(task_id, 10, "Identifying video source...")
+            title = cls.get_video_title(link)
+            
+            cls._update_progress(task_id, 30, "Pulling audio from stream...")
+            audio_path = cls.download_audio(link)
+            
+            cls._update_progress(task_id, 60, "Turning speech into text...")
+            transcription = cls.transcribe_audio(audio_path)
+            if not transcription:
+                cls._update_progress(task_id, 100, "Transcription failed.", status='FAILED')
+                return
+
+            cls._update_progress(task_id, 80, "Structuring article draft...")
+            content = cls.synthesize_article(transcription)
+            if not content:
+                cls._update_progress(task_id, 100, "AI synthesis failed.", status='FAILED')
+                return
+
+            cls._update_progress(task_id, 95, "Finalizing article...")
+            blog_post = cls.save_blog_post(user, title, link, content)
+            
+            cls._update_progress(task_id, 100, "Article finalized.", status='COMPLETED', blog_post=blog_post)
+            return blog_post
+
+        except Exception as e:
+            cls._update_progress(task_id, 100, f"Error: {str(e)}", status='FAILED')
+            raise e
 
     @staticmethod
     def get_video_title(link):

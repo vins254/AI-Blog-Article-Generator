@@ -72,3 +72,28 @@ class BlogPost(models.Model):
     def __str__(self):
         """String representation of the object (used in the Django Admin panel)."""
         return f"{self.youtube_title} | Created by {self.user.username}"
+
+class TaskProgress(models.Model):
+    """
+    Tracks the real-time status of a background generation task.
+    This model is used to communicate progress between the Celery/Django-Q 
+    worker and the frontend UI polling mechanism.
+    """
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('RUNNING', 'Running'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    task_id = models.CharField(max_length=255, unique=True)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PENDING')
+    message = models.CharField(max_length=255, blank=True)
+    progress = models.IntegerField(default=0) # 0 to 100
+    blog_post = models.ForeignKey(BlogPost, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Task {self.task_id} | {self.status} ({self.progress}%)"

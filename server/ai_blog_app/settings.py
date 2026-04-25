@@ -125,7 +125,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'blog_generator' # Core logic for article processing
+    
+    # Background Tasks
+    'django_q',
+
+    # App Components
+    'blog_generator',
 ]
 
 MIDDLEWARE = [
@@ -233,3 +238,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+# ── BACKGROUND TASKS (Django-Q) ──
+# Using the ORM broker (database) to avoid requiring a separate Redis instance.
+# This keeps the architecture simple for Render/Supabase deployments.
+Q_CLUSTER = {
+    'name': 'ContentFlowQueue',
+    'workers': 2,
+    'recycle': 500,
+    'timeout': 300, # 5 minutes max per task
+    'retry': 360,   # Retry after 6 mins if no response
+    'orm': 'default',
+}

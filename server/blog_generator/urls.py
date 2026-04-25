@@ -54,8 +54,10 @@ urlpatterns = [
     
     # Core API endpoints
     path('generate-blog', views.generate_blog, name='generate-blog'),
+    path('task-status/<str:task_id>/', views.task_status, name='task-status'),
     
     # User data views
     path('blog-list', views.blog_list, name='blog-list'),
     path('blog-details/<int:pk>/', views.blog_details, name='blog-details'),
+    path('delete-blog/<int:pk>/', views.delete_blog, name='delete-blog'),
 ]

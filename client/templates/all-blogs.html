@@ -76,6 +76,12 @@
                         <a href="/blog-details/{{ article.id }}/" class="btn-text">
                             Read Publication <i data-lucide="arrow-right" style="width:14px; height:14px;"></i>
                         </a>
+                        <a href="/delete-blog/{{ article.id }}/" 
+                           class="btn-text" 
+                           style="color: #ef4444; margin-left: 1.5rem;"
+                           onclick="return confirm('Are you sure you want to permanently delete this publication?')">
+                            Delete
+                        </a>
                     </div>
                 </article>
                 {% empty %}

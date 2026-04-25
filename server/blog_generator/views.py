@@ -10,9 +10,12 @@ import re
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse
+from django.utils.crypto import get_random_string
 
-from .models import BlogPost
+from django_q.tasks import async_task
+
+from .models import BlogPost, TaskProgress
 from .forms import UserSignupForm, UserLoginForm
 from .services import BlogService
 
@@ -26,8 +29,8 @@ def index(request):
 @login_required
 def generate_blog(request):
     """
-    Orchestrates the blog generation pipeline using the Service layer.
-    Uses NDJSON streaming for real-time UI updates.
+    Initializes a background task for blog generation.
+    Returns a task_id that the frontend will use for polling.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -38,42 +41,56 @@ def generate_blog(request):
     except (json.JSONDecodeError, AttributeError):
         return JsonResponse({'error': 'Invalid request body'}, status=400)
 
-    # Basic validation before starting the pipeline
     if not yt_link or not re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+', yt_link):
-        return JsonResponse({'error': 'Invalid YouTube URL provided.'}, status=400)
+        return JsonResponse({'error': 'Invalid YouTube URL.'}, status=400)
 
-    def stream_generator():
-        try:
-            # Stage 1: Metadata
-            yield json.dumps({'step': 1, 'msg': 'Identifying video source...'}) + "\n"
-            title = BlogService.get_video_title(yt_link)
+    # 1. Create a unique task identifier
+    task_id = get_random_string(32)
+    
+    # 2. Initialize progress tracking in the DB
+    TaskProgress.objects.create(
+        user=request.user,
+        task_id=task_id,
+        status='PENDING',
+        message='Initializing background worker...'
+    )
+
+    # 3. Hand off the heavy lifting to the background queue (Django-Q)
+    # This call returns immediately, preventing the web thread from blocking.
+    async_task(
+        'blog_generator.services.BlogService.process_video_to_blog',
+        request.user,
+        yt_link,
+        task_id=task_id
+    )
+
+    return JsonResponse({'task_id': task_id})
+
+
+@login_required
+def task_status(request, task_id):
+    """
+    Endpoint for the UI to poll the status of a background generation task.
+    """
+    try:
+        task = TaskProgress.objects.get(task_id=task_id, user=request.user)
+        response = {
+            'status': task.status,
+            'progress': task.progress,
+            'message': task.message,
+        }
+        
+        # If complete, include the final blog details
+        if task.status == 'COMPLETED' and task.blog_post:
+            response.update({
+                'content': task.blog_post.generated_content,
+                'title': task.blog_post.youtube_title,
+                'blog_id': task.blog_post.id
+            })
             
-            # Stage 2: Audio Extraction
-            yield json.dumps({'step': 2, 'msg': 'Pulling audio from stream...'}) + "\n"
-            audio_path = BlogService.download_audio(yt_link)
-            
-            # Stage 3: Transcription
-            yield json.dumps({'step': 3, 'msg': 'Turning speech into text...'}) + "\n"
-            transcription = BlogService.transcribe_audio(audio_path)
-            if not transcription:
-                yield json.dumps({'error': 'Failed to generate transcription.'}) + "\n"
-                return
-
-            # Stage 4: AI Synthesis
-            yield json.dumps({'step': 4, 'msg': 'Structuring article draft...'}) + "\n"
-            content = BlogService.synthesize_article(transcription)
-            if not content:
-                yield json.dumps({'error': 'AI synthesis engine failed.'}) + "\n"
-                return
-
-            # Stage 5: Finalization & Persistence
-            BlogService.save_blog_post(request.user, title, yt_link, content)
-            yield json.dumps({'step': 5, 'msg': 'Success', 'content': content, 'title': title}) + "\n"
-
-        except Exception as e:
-            yield json.dumps({'error': f'Internal pipeline error: {str(e)}'}) + "\n"
-
-    return StreamingHttpResponse(stream_generator(), content_type='application/x-ndjson')
+        return JsonResponse(response)
+    except TaskProgress.DoesNotExist:
+        return JsonResponse({'error': 'Task not found'}, status=404)
 
 
 @login_required
@@ -91,6 +108,15 @@ def blog_details(request, pk):
     except BlogPost.DoesNotExist:
         return redirect('/blog-list')
     return render(request, 'blog-details.html', {'blog_article_detail': article})
+@login_required
+def delete_blog(request, pk):
+    """Securely deletes an article after confirming ownership."""
+    try:
+        article = BlogPost.objects.get(id=pk, user=request.user)
+        article.delete()
+    except BlogPost.DoesNotExist:
+        pass
+    return redirect('/blog-list')
 
 
 # ── AUTHENTICATION ──

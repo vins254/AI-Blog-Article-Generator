@@ -114,7 +114,22 @@
             if (strength <= 1) strengthBar.style.background = '#ef4444';
             else if (strength === 2 || strength === 3) strengthBar.style.background = '#eab308';
             else if (strength >= 4) strengthBar.style.background = 'var(--accent)';
+            checkMatch();
         });
+
+        const repeatInput = document.getElementById('repeatPassword');
+        function checkMatch() {
+            if (!repeatInput.value) {
+                repeatInput.style.borderColor = 'var(--border)';
+                return;
+            }
+            if (passwordInput.value === repeatInput.value) {
+                repeatInput.style.borderColor = 'var(--accent)';
+            } else {
+                repeatInput.style.borderColor = '#ef4444';
+            }
+        }
+        repeatInput.addEventListener('input', checkMatch);
     </script>
 </body>
 </html>
