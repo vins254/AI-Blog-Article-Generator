@@ -65,17 +65,19 @@
             </div>
             {% endif %}
 
-            <form method="POST" class="auth-form">
+            <form method="POST" class="auth-form" id="loginForm">
                 {% csrf_token %}
                 <div class="form-field">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" required autocomplete="username">
+                    <span class="error-text" id="user-error">Username is required.</span>
                 </div>
                 <div class="form-field">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required autocomplete="current-password">
+                    <span class="error-text" id="pass-error">Password is required.</span>
                 </div>
-                <button type="submit">Continue</button>
+                <button type="submit" id="loginBtn">Continue</button>
             </form>
 
             <footer style="margin-top: 2rem; text-align: left; font-size: 0.9rem;">
@@ -84,5 +86,26 @@
             </footer>
         </main>
     </div>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+        
+        const username = document.getElementById('username');
+        const pass = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+
+        function validate() {
+            const uValid = username.value.length > 0;
+            const pValid = pass.value.length > 0;
+            
+            username.classList.toggle('invalid', !uValid && username.value.length > 0);
+            pass.classList.toggle('invalid', !pValid && pass.value.length > 0);
+            
+            document.getElementById('user-error').style.display = (!uValid && username.value.length > 0) ? 'block' : 'none';
+            document.getElementById('pass-error').style.display = (!pValid && pass.value.length > 0) ? 'block' : 'none';
+            
+            loginBtn.disabled = !(uValid && pValid);
+        }
+
+        [username, pass].forEach(el => el.addEventListener('input', validate));
+    </script>
 </html>

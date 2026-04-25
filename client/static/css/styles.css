@@ -270,17 +270,23 @@ button:hover { opacity: 0.9; }
 }
 
 /* ── UTILS ── */
-.badge {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 2px;
-  background: var(--bg-surface-soft);
-  color: var(--text-secondary);
+.accent-text { color: var(--accent); }
+
+/* ── FORM VALIDATION STATES ── */
+.error-text {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: var(--s-1);
+  display: none; /* Shown via JS */
 }
 
-.accent-text { color: var(--accent); }
+input.invalid {
+  border-color: #ef4444 !important;
+}
+
+input.valid {
+  border-color: var(--accent) !important;
+}
 
 /* ── RESPONSIVE DESIGN ── */
 @media (max-width: 768px) {

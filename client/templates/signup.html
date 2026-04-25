@@ -65,15 +65,17 @@
             </div>
             {% endif %}
 
-            <form method="POST" class="auth-form">
+            <form method="POST" class="auth-form" id="signupForm">
                 {% csrf_token %}
                 <div class="form-field">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" required autocomplete="username" minlength="3" pattern="^[a-zA-Z0-9_]+$">
+                    <span class="error-text" id="username-error">Use at least 3 alphanumeric characters.</span>
                 </div>
                 <div class="form-field">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" required autocomplete="email">
+                    <span class="error-text" id="email-error">Please enter a valid email address.</span>
                 </div>
                 <div class="form-field">
                     <label for="password">Password</label>
@@ -81,12 +83,14 @@
                     <div class="progress-bar" style="height: 1px; margin-top: 0.25rem;">
                         <div id="passwordStrengthBar" class="progress-inner" style="width: 0%; background: var(--text-muted);"></div>
                     </div>
+                    <span class="error-text" id="password-error">Password must be at least 8 characters.</span>
                 </div>
                 <div class="form-field">
                     <label for="repeatPassword">Confirm Password</label>
                     <input type="password" id="repeatPassword" name="repeatPassword" required autocomplete="new-password" minlength="8">
+                    <span class="error-text" id="repeat-error">Passwords do not match.</span>
                 </div>
-                <button type="submit">Create Account</button>
+                <button type="submit" id="submitBtn">Create Account</button>
             </form>
 
             <footer style="margin-top: 2rem; text-align: left; font-size: 0.9rem;">
@@ -95,41 +99,54 @@
             </footer>
         </main>
     </div>
-    <script>lucide.createIcons();</script>
-
     <script>
-        const passwordInput = document.getElementById('password');
+        lucide.createIcons();
+        
+        const form = document.getElementById('signupForm');
+        const username = document.getElementById('username');
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        const repeat = document.getElementById('repeatPassword');
+        const submitBtn = document.getElementById('submitBtn');
         const strengthBar = document.getElementById('passwordStrengthBar');
 
-        passwordInput.addEventListener('input', () => {
-            const val = passwordInput.value;
+        function validateField(input, condition, errorId) {
+            const error = document.getElementById(errorId);
+            if (condition) {
+                input.classList.remove('invalid');
+                input.classList.add('valid');
+                error.style.display = 'none';
+                return true;
+            } else {
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+                if (input.value.length > 0) error.style.display = 'block';
+                return false;
+            }
+        }
+
+        function checkForm() {
+            const isUserValid = validateField(username, username.value.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username.value), 'username-error');
+            const isEmailValid = validateField(email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value), 'email-error');
+            const isPassValid = validateField(password, password.value.length >= 8, 'password-error');
+            const isMatch = validateField(repeat, repeat.value === password.value && repeat.value.length > 0, 'repeat-error');
+
+            // Password strength logic
+            const val = password.value;
             let strength = 0;
             if (val.length >= 8) strength++;
             if (/[A-Z]/.test(val)) strength++;
             if (/[0-9]/.test(val)) strength++;
             if (/[^A-Za-z0-9]/.test(val)) strength++;
-
             strengthBar.style.width = (val.length > 0 ? (strength + 1) * 20 : 0) + '%';
-            
             if (strength <= 1) strengthBar.style.background = '#ef4444';
             else if (strength === 2 || strength === 3) strengthBar.style.background = '#eab308';
             else if (strength >= 4) strengthBar.style.background = 'var(--accent)';
-            checkMatch();
-        });
 
-        const repeatInput = document.getElementById('repeatPassword');
-        function checkMatch() {
-            if (!repeatInput.value) {
-                repeatInput.style.borderColor = 'var(--border)';
-                return;
-            }
-            if (passwordInput.value === repeatInput.value) {
-                repeatInput.style.borderColor = 'var(--accent)';
-            } else {
-                repeatInput.style.borderColor = '#ef4444';
-            }
+            submitBtn.disabled = !(isUserValid && isEmailValid && isPassValid && isMatch);
         }
-        repeatInput.addEventListener('input', checkMatch);
+
+        [username, email, password, repeat].forEach(el => el.addEventListener('input', checkForm));
     </script>
 </body>
 </html>

@@ -83,11 +83,10 @@
                 </header>
 
                 <div class="input-group" id="inputGroup">
-                    <input type="url" id="youtubeLink" placeholder="Paste YouTube URL..." autocomplete="off">
-                    <button id="generateBlogButton">
-                        Generate
-                    </button>
+                    <input type="url" id="youtubeLink" placeholder="Paste YouTube link here..." required>
+                    <button id="generateBlogButton">Generate</button>
                 </div>
+                <span class="error-text" id="url-error" style="margin-top: 0.5rem; display: none; color: red;">Please enter a valid YouTube URL.</span>
             </section>
 
             <!-- ── PIPELINE (SYSTEM VISIBILITY) ── -->
@@ -241,10 +240,21 @@
         });
 
         document.getElementById('generateBlogButton').addEventListener('click', async () => {
-            const youtubeLink = document.getElementById('youtubeLink').value.trim();
+            const youtubeLinkInput = document.getElementById('youtubeLink');
+            const youtubeLink = youtubeLinkInput.value.trim();
             const btn = document.getElementById('generateBlogButton');
+            const urlError = document.getElementById('url-error');
 
-            if (!youtubeLink) return;
+            const isUrlValid = /^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.test(youtubeLink);
+            
+            if (!isUrlValid) {
+                youtubeLinkInput.classList.add('invalid');
+                urlError.style.display = 'block';
+                return;
+            } else {
+                youtubeLinkInput.classList.remove('invalid');
+                urlError.style.display = 'none';
+            }
 
             btn.disabled = true;
             btn.textContent = "Processing...";
