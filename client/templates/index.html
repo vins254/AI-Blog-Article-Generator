@@ -147,10 +147,8 @@
             }
             
             if (savedContent) {
-                const blogContent = document.getElementById('blogContent');
-                const blogOutput = document.getElementById('blogOutput');
                 blogContent.innerHTML = savedContent;
-                blogOutput.classList.add('active');
+                blogOutput.style.display = 'block';
             }
         });
 
@@ -172,7 +170,7 @@
             if (!youtubeLink) return;
 
             setLoading(true);
-            blogOutput.classList.remove('active');
+            blogOutput.style.display = 'none';
             blogContent.innerHTML = '';
 
             try {
@@ -205,17 +203,17 @@
                     const response = await fetch(`/task-status/${taskId}/`);
                     const data = await response.json();
 
-                    if (data.state === 'SUCCESS') {
+                    if (data.status === 'COMPLETED') {
                         clearInterval(pollInterval);
                         blogContent.innerHTML = data.content;
-                        blogOutput.classList.add('active');
+                        blogOutput.style.display = 'block';
                         setLoading(false);
-                    } else if (data.state === 'FAILURE') {
+                    } else if (data.status === 'FAILED') {
                         clearInterval(pollInterval);
                         alert('Generation failed.');
                         setLoading(false);
                     } else {
-                        loadingText.textContent = `${data.step_name}... (${data.progress}%)`;
+                        loadingText.textContent = `${data.message} (${data.progress}%)`;
                     }
                 } catch (e) {
                     console.error("Polling error:", e);
