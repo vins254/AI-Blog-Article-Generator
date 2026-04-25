@@ -37,56 +37,53 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- ── NAVIGATION (Grounded) ── -->
     <nav class="navbar">
-        <a href="/" class="navbar-brand">
+        <a href="/" class="brand">
             <div class="brand-icon">CF</div>
             ContentFlow
         </a>
-        <div class="navbar-links">
-            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
-            <a href="/" class="btn-nav btn-nav-outline">New Article</a>
-            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
+        <div class="nav-links">
+            <span class="user-tag">User: {{ user.username }}</span>
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/blog-list" class="nav-link active">Archive</a>
+            <a href="/logout" class="nav-link" style="color: var(--danger);">Logout</a>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="card">
-            <div class="blog-list-header">
-                <h2>Article Archive</h2>
-                <span class="blog-count">{{ blog_articles|length }} record{{ blog_articles|length|pluralize }}</span>
-            </div>
+    <div class="container">
+        <header style="margin-bottom: 32px;">
+            <h1>Article Archive</h1>
+            <p class="text-secondary">Historically processed content and synthesized publications.</p>
+        </header>
 
-            <div>
-                {% for article in blog_articles reversed %}
-                <a href="/blog-details/{{ article.id }}/" class="blog-item">
+        <section>
+            {% for article in blog_articles %}
+            <div class="blog-item">
+                <a href="/blog-details/{{ article.id }}/" style="text-decoration: none;">
                     <div class="blog-item-title">{{ article.youtube_title }}</div>
-                    <div class="blog-item-preview">{{ article.generated_content|truncatechars:120 }}</div>
-                    <div class="blog-item-meta" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <span class="meta-tag">Processed</span>
-                            <span>{{ article.created_at|date:"M d, Y" }}</span>
-                        </div>
-                        <form action="/delete-blog/{{ article.id }}/" method="GET" style="display:inline;">
-                            <button type="submit" 
-                                    style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer;"
-                                    onclick="return confirm('Permanently delete this record?')">
-                                Delete
-                            </button>
-                        </form>
-                    </div>
+                    <div class="blog-item-preview">{{ article.generated_content|striptags|truncatechars:160 }}</div>
                 </a>
-                {% empty %}
-                <div class="empty-state">
-                    <h3>No records found</h3>
-                    <p>Process your first video link to generate an article.</p>
-                    <a href="/" class="btn btn-primary">Process New Content</a>
+                <div class="blog-item-meta">
+                    <div>
+                        <span class="badge">Article</span>
+                        <span style="margin-left: 8px;">{{ article.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <a href="/delete-blog/{{ article.id }}/" 
+                       style="color: var(--danger); text-decoration: none; font-weight: 600;"
+                       onclick="return confirm('Permanently remove this publication?')">
+                        Remove
+                    </a>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-    </main>
+            {% empty %}
+            <div class="card" style="text-align: center; border-style: dashed; padding: 64px;">
+                <p class="text-muted">Your archive is currently empty.</p>
+                <a href="/" class="btn btn-primary" style="margin-top: 24px;">Start Your First Workflow</a>
+            </div>
+            {% endfor %}
+        </section>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

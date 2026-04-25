@@ -48,58 +48,51 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <!-- ── NAVIGATION ── -->
+    <!-- ── NAVIGATION (Grounded) ── -->
     <nav class="navbar">
-        <a href="/" class="navbar-brand">
+        <a href="/" class="brand">
             <div class="brand-icon">CF</div>
             ContentFlow
         </a>
-        <div class="navbar-links">
-            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
-            <a href="/blog-list" class="btn-nav btn-nav-outline">My Articles</a>
-            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
+        <div class="nav-links">
+            <span class="user-tag">User: {{ user.username }}</span>
+            <a href="/" class="nav-link active">Dashboard</a>
+            <a href="/blog-list" class="nav-link">Archive</a>
+            <a href="/logout" class="nav-link" style="color: var(--danger);">Logout</a>
         </div>
     </nav>
 
     <!-- ── MAIN DASHBOARD ── -->
     <main class="main-content">
-        <div class="card">
-            <div class="hero-section">
-                <h1 class="hero-title">Video to Article Automation</h1>
-                <p class="hero-description">
-                    Provide a YouTube link to process the video transcript 
-                    and generate a structured, professional article in real-time.
-                </p>
-            </div>
+        <div class="container">
+            <!-- ── GENERATION DASHBOARD ── -->
+            <section class="card">
+                <h1>Generate Publication</h1>
+                <p style="margin-bottom: 24px;">Transform technical video streams into structured editorial articles.</p>
 
-            <!-- YouTube URL Submission -->
-            <div class="input-section">
-                <h3>Video Source</h3>
-                <div class="input-group" id="inputGroup">
-                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
-                    <button id="generateBlogButton" class="btn btn-primary">
-                        Generate Article
-                    </button>
+                <div class="form-group">
+                    <label for="youtubeLink">YouTube URL</label>
+                    <input type="url" id="youtubeLink" class="input-field" placeholder="https://youtube.com/watch?v=..." required>
+                    <span class="error-text" id="url-error" style="display: none;">Please enter a valid YouTube URL.</span>
                 </div>
-            </div>
+                
+                <button id="generateBlogButton" class="btn btn-primary">
+                    Generate Article
+                </button>
 
-            <!-- REAL-TIME PROGRESS FEEDBACK
-                 This section is hidden by default and activated via JavaScript
-                 when a generation request begins. -->
-            <div id="loading-container" class="loading-container">
-                <div class="spinner"></div>
-                <span class="loading-text" id="loadingText">Connecting to source...</span>
-            </div>
-
-            <!-- ARTICLE OUTPUT
-                 Dynamic container that expands to show the AI-generated results. -->
-            <div id="blogOutput" class="blog-output">
-                <div class="blog-output-header">
-                    <div class="status-dot"></div>
-                    Processing Complete
+                <!-- Loading State -->
+                <div id="loading-container" class="loading-container">
+                    <div class="spinner"></div>
+                    <span id="loadingText" class="text-secondary" style="font-size: 14px;">Initializing engine...</span>
                 </div>
-                <div id="blogContent" class="blog-content"></div>
-            </div>
+            </section>
+
+            <!-- ── ARTICLE OUTPUT ── -->
+            <section id="blogOutput" class="card" style="display: none; padding: 48px;">
+                <article class="article-body">
+                    <div id="blogContent"></div>
+                </article>
+            </section>
         </div>
     </main>
 
@@ -168,7 +161,7 @@
                 const blogContent = document.getElementById('blogContent');
                 const blogOutput = document.getElementById('blogOutput');
                 blogContent.innerHTML = savedContent;
-                blogOutput.classList.add('active');
+                blogOutput.style.display = 'block';
             }
         });
 
@@ -185,12 +178,11 @@
             const youtubeLink = document.getElementById('youtubeLink').value.trim();
             const blogContent = document.getElementById('blogContent');
             const blogOutput = document.getElementById('blogOutput');
-            const loadingText = document.getElementById('loadingText');
 
             if (!youtubeLink) return;
 
             setLoading(true);
-            blogOutput.classList.remove('active');
+            blogOutput.style.display = 'none';
             blogContent.innerHTML = '';
 
             try {
@@ -226,7 +218,7 @@
                     if (data.state === 'SUCCESS') {
                         clearInterval(pollInterval);
                         blogContent.innerHTML = data.content;
-                        blogOutput.classList.add('active');
+                        blogOutput.style.display = 'block';
                         setLoading(false);
                     } else if (data.state === 'FAILURE') {
                         clearInterval(pollInterval);
