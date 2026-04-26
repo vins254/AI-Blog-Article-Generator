@@ -36,53 +36,56 @@
     <title>{{ blog_article_detail.youtube_title }} — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="{% static 'js/theme-controller.js' %}"></script>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <a href="/" class="navbar-brand">
-            <div class="brand-icon">CF</div>
-            ContentFlow
-        </a>
+        <div class="brand">
+            <i data-lucide="layers" class="accent-text"></i>
+            ContentFlow<span class="brand-dot">.</span>
+        </div>
         <div class="navbar-links">
-            <button id="themeToggle" class="theme-toggle" title="Toggle Mode">
-                <i data-lucide="sun"></i>
-            </button>
-            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
-            <a href="/" class="btn-nav btn-nav-outline">New Article</a>
-            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
+            <a href="/blog-list" class="btn-nav">Archive</a>
+            <a href="/logout" class="btn-nav">Logout</a>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="card">
-            <!-- Header -->
-            <div class="blog-detail-header">
-                <a href="/blog-list" class="back-link">← Back to Archive</a>
-                <h1>{{ blog_article_detail.youtube_title }}</h1>
-            </div>
+    <div class="container">
+        <main class="dashboard">
+            <section class="article-reader">
+                <header class="article-header">
+                    <div class="article-meta">
+                        <span>{{ blog_article_detail.created_at|date:"F d, Y" }}</span>
+                        <span class="dot">·</span>
+                        <a href="{{ blog_article_detail.youtube_link }}" target="_blank" class="accent-text">Source Material</a>
+                        <span class="dot">·</span>
+                        <span id="reading-time">Calculating read time...</span>
+                    </div>
+                    <h1>{{ blog_article_detail.youtube_title }}</h1>
+                </header>
 
-            <!-- Meta -->
-            <div class="blog-detail-meta">
-                <div class="meta-item">
-                    <strong>Processed:</strong> {{ blog_article_detail.created_at|date:"F d, Y \a\t h:i A" }}
+                <div id="content-body" class="article-body">
+                    {{ blog_article_detail.generated_content|linebreaksbr }}
                 </div>
-                <div class="meta-item">
-                    <strong>Source:</strong> 
-                    <a href="{{ blog_article_detail.youtube_link }}" target="_blank" rel="noopener">
-                        YouTube Original ↗
+
+                <footer class="reader-footer">
+                    <a href="/blog-list" class="btn-text">
+                        <i data-lucide="arrow-left" style="width:14px; height:14px;"></i> Return to Archive
                     </a>
-                </div>
-            </div>
+                </footer>
+            </section>
+        </main>
+    </div>
 
-            <!-- Article Body -->
-            <div class="blog-detail-content">
-                {{ blog_article_detail.generated_content|linebreaksbr }}
-            </div>
-        </div>
-    </main>
+    <script>
+        lucide.createIcons();
+        window.addEventListener('DOMContentLoaded', () => {
+            const body = document.getElementById('content-body');
+            const words = body.innerText.split(/\s+/).length;
+            const time = Math.max(1, Math.ceil(words / 200));
+            document.getElementById('reading-time').textContent = `${time} min read`;
+        });
+    </script>
 
     <!-- Footer -->
     <footer class="footer">
