@@ -1,3 +1,32 @@
+{% comment %}
+  =============================================================================
+  FILE: client/templates/blog-details.html
+  PURPOSE: The full-article reader page. Displays the complete AI-generated
+           content for one specific BlogPost record, along with metadata like
+           the processing date and a link back to the original YouTube video.
+  =============================================================================
+
+  HOW IT WORKS:
+  - The URL pattern /blog-details/<pk>/ captures the article's numeric ID.
+  - The view (blog_details in views.py) uses that ID to fetch the correct
+    BlogPost row from the database. Crucially, it also filters by the
+    logged-in user so one user can NEVER read another user's articles.
+  - The full article content is passed to this template as 'blog_article_detail'.
+
+  FEATURES & TOOLS:
+  - Django Template Language (DTL): {{ variable }} rendering for title, content,
+    dates, and source links.
+  - `|date:"F d, Y \a\t h:i A"` filter: Renders a precise, formatted timestamp
+    like "April 25, 2026 at 02:30 PM".
+  - `|linebreaksbr` filter: Converts raw newline characters in the stored article
+    text into proper HTML <br> tags so formatting is preserved visually.
+  - Security: Protected by @login_required + object-level ownership check
+    (get(id=pk, user=request.user)) in views.py, so direct URL manipulation
+    by other users returns a 404 or redirect.
+  - Dynamic <title> tag: The browser tab title updates to the article's own
+    name for better UX and bookmarking.
+  =============================================================================
+{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -9,39 +38,52 @@
     <script src="{% static 'js/theme-controller.js' %}"></script>
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
-        <a href="/" class="brand">
-            <div class="brand-dot"></div>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
             ContentFlow
         </a>
-        <div class="nav-links">
-            <a href="/blog-list" class="nav-link">Archive</a>
-            <div id="themeToggle" class="theme-switch" title="Toggle Theme"></div>
-            <a href="/logout" class="nav-link" style="color: var(--danger);">Logout</a>
+        <div class="navbar-links">
+            <button id="themeToggle" class="theme-toggle">Mode</button>
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/blog-list" class="btn-nav btn-nav-outline">Archive</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <div class="reader-container" style="display: block;">
-        <article class="reader-card">
-            <header style="margin-bottom: 3rem; border-bottom: 1px solid var(--border-dim); padding-bottom: 2rem;">
-                <a href="/blog-list" style="color: var(--accent); text-decoration: none; font-size: 0.85rem; font-weight: 600;">← Archive</a>
-                <h1 style="margin-top: 1.5rem; font-size: 2.75rem; line-height: 1.1; letter-spacing: -0.04em; font-weight: 800;">{{ blog_article_detail.youtube_title }}</h1>
-                <p style="color: var(--text-sub); margin-top: 1rem; font-size: 0.9rem;">
-                    Published {{ blog_article_detail.created_at|date:"F d, Y" }}
-                </p>
-            </header>
-            
-            <div class="editorial-body">
-                {{ blog_article_detail.generated_content|safe }}
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <!-- Header -->
+            <div class="blog-detail-header">
+                <a href="/blog-list" class="back-link">← Back to Archive</a>
+                <h1>{{ blog_article_detail.youtube_title }}</h1>
             </div>
 
-            <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-dim); display: flex; justify-content: space-between; align-items: center;">
-                <a href="{{ blog_article_detail.youtube_link }}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.85rem; font-weight: 700;">
-                    Video Source ↗
-                </a>
-                <span style="color: var(--text-muted); font-size: 0.8rem;">Synthesized Publication</span>
-            </footer>
-        </article>
-    </div>
+            <!-- Meta -->
+            <div class="blog-detail-meta">
+                <div class="meta-item">
+                    <strong>Processed:</strong> {{ blog_article_detail.created_at|date:"F d, Y \a\t h:i A" }}
+                </div>
+                <div class="meta-item">
+                    <strong>Source:</strong> 
+                    <a href="{{ blog_article_detail.youtube_link }}" target="_blank" rel="noopener">
+                        YouTube Original ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Article Body -->
+            <div class="blog-detail-content">
+                {{ blog_article_detail.generated_content|linebreaksbr }}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
+    </footer>
 </body>
 </html>

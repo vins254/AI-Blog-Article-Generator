@@ -1,52 +1,89 @@
+{% comment %}
+  =============================================================================
+  FILE: client/templates/all-blogs.html
+  PURPOSE: The "Article Archive" page — shows every article the logged-in
+           user has ever generated, listed from newest to oldest.
+  =============================================================================
+
+  HOW IT WORKS:
+  - Django's view (blog_list in views.py) queries the BlogPost model and passes
+    a list called 'blog_articles' into this template.
+  - We loop over that list using Django's {% for %} tag to build the card grid.
+  - The {% empty %} tag handles the edge case where the user has no articles yet,
+    giving them a friendly prompt to go create their first one.
+
+  FEATURES & TOOLS:
+  - Django Template Language (DTL): {% for %}, {% empty %}, {% endfor %},
+    {{ variable }} syntax for server-side HTML rendering.
+  - `|truncatechars:120` filter: Automatically shortens the article preview
+    text to 120 characters so the list stays clean and scannable.
+  - `|length` and `|pluralize` filters: Dynamically display "1 record" vs
+    "3 records" without any extra Python code.
+  - `|date:"M d, Y"` filter: Formats the stored UTC timestamp into a
+    human-friendly string like "Apr 25, 2026".
+  - Security: This page is protected by the @login_required decorator in
+    views.py. Unauthenticated users are redirected to /login automatically.
+  - `{% load static %}`: Enables the {% static %} tag so we can reference
+    the CSS file from client/static/ correctly regardless of deployment environment.
+  =============================================================================
+{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archive — ContentFlow</title>
+    <title>My Articles — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="{% static 'js/theme-controller.js' %}"></script>
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
-        <a href="/" class="brand">
-            <div class="brand-dot"></div>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
             ContentFlow
         </a>
-        <div class="nav-links">
-            <a href="/" class="nav-link">Dashboard</a>
-            <div id="themeToggle" class="theme-switch" title="Toggle Theme"></div>
-            <a href="/logout" class="nav-link" style="color: var(--danger);">Logout</a>
+        <div class="navbar-links">
+            <button id="themeToggle" class="theme-toggle">Mode</button>
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/" class="btn-nav btn-nav-outline">New Article</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <div class="archive-container">
-        <h1 class="archive-title">Archive.</h1>
-        
-        <div class="article-list">
-            {% for article in blog_articles %}
-            <div class="article-item">
-                <a href="/blog-details/{{ article.id }}/" style="text-decoration: none;">
-                    <div class="article-title">{{ article.youtube_title }}</div>
-                    <p class="article-preview">{{ article.generated_content|striptags|truncatechars:180 }}</p>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <div class="blog-list-header">
+                <h2>Article Archive</h2>
+                <span class="blog-count">{{ blog_articles|length }} record{{ blog_articles|length|pluralize }}</span>
+            </div>
+
+            <div>
+                {% for article in blog_articles reversed %}
+                <a href="/blog-details/{{ article.id }}/" class="blog-item">
+                    <div class="blog-item-title">{{ article.youtube_title }}</div>
+                    <div class="blog-item-preview">{{ article.generated_content|truncatechars:120 }}</div>
+                    <div class="blog-item-meta">
+                        <span class="meta-tag">Processed</span>
+                        <span>{{ article.created_at|date:"M d, Y" }}</span>
+                    </div>
                 </a>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted);">
-                    <span>Published {{ article.created_at|date:"M d, Y" }}</span>
-                    <a href="/delete-blog/{{ article.id }}/" 
-                       style="color: var(--danger); text-decoration: none; font-weight: 600;"
-                       onclick="return confirm('Delete this publication?')">
-                        Remove
-                    </a>
+                {% empty %}
+                <div class="empty-state">
+                    <h3>No records found</h3>
+                    <p>Process your first video link to generate an article.</p>
+                    <a href="/" class="btn btn-primary">Process New Content</a>
                 </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div style="padding: 4rem; border: 1px dashed var(--border-dim); border-radius: 12px; text-align: center;">
-                <p style="color: var(--text-muted);">No records found.</p>
-                <a href="/" class="nav-link" style="color: var(--accent); display: block; margin-top: 1rem;">Start synthesizing →</a>
-            </div>
-            {% endfor %}
         </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
+    </footer>
 </body>
 </html>

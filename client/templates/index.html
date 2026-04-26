@@ -1,49 +1,125 @@
+{% comment %}
+  =============================================================================
+  FILE: client/templates/index.html
+  PURPOSE: The main application dashboard — the page where users paste a
+           YouTube URL and trigger the full AI article generation pipeline.
+           This is the most complex template in the project.
+  =============================================================================
+
+  HOW IT WORKS:
+  1. The user pastes a YouTube URL into the input field and clicks "Generate Article".
+  2. A JavaScript fetch() POST request is sent to the /generate-blog endpoint
+     with the URL and the Django CSRF token in the headers.
+  3. The Django backend returns a Streaming HTTP Response using NDJSON format
+     (Newline Delimited JSON — one JSON object per line).
+  4. The JavaScript reads the stream chunk by chunk using a ReadableStream reader,
+     updating the progress bar text for each step (1/4, 2/4, 3/4, 4/4).
+  5. When the final step (step 5) arrives, the full article Markdown is converted
+     to HTML using a lightweight regex parser and injected into the page.
+  6. Both the URL and the final article are saved to localStorage so the user's
+     work is restored automatically if they refresh the page.
+
+  FEATURES & TOOLS:
+  - Fetch API + ReadableStream: Enables real-time server-sent data without
+    using WebSockets or SSE. We read the response body incrementally.
+  - NDJSON Streaming: The backend yields one JSON line per stage, and we
+    parse each line as it arrives to update the UI progressively.
+  - CSRF Security: The getCookie() function reads Django's csrftoken from
+    the browser cookie and sends it in the X-CSRFToken request header.
+  - LocalStorage Persistence: URL input is saved on every keystroke
+    (cf_last_url). Generated HTML article is saved after step 5 completes
+    (cf_last_content). Both are restored on DOMContentLoaded, so a page
+    reload brings the user back to exactly where they were.
+  - Lightweight Markdown-to-HTML Parser: A chain of .replace() regex calls
+    converts **bold**, # headings, and - lists from the AI output into
+    real HTML tags before injecting into the DOM.
+  - {% load static %} / {% static %}: Resolves the CSS path correctly
+    in both local development and production environments.
+  =============================================================================
+{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ContentFlow — Video to Editorial</title>
+    <meta name="description" content="Automate your content workflow by converting YouTube videos into structured articles.">
+    <title>ContentFlow — Video Content Automation</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{% static 'js/theme-controller.js' %}"></script>
 </head>
 <body>
+    <!-- ── NAVIGATION ── -->
     <nav class="navbar">
-        <a href="/" class="brand">
-            <div class="brand-dot"></div>
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon">CF</div>
             ContentFlow
         </a>
-        <div class="nav-links">
-            <a href="/blog-list" class="nav-link">Archive</a>
-            <div id="themeToggle" class="theme-switch" title="Toggle Theme"></div>
-            <a href="/logout" class="nav-link" style="color: var(--danger);">Logout</a>
+        <div class="navbar-links">
+            <button id="themeToggle" class="theme-toggle">Mode</button>
+            <span class="nav-user">User: <span class="username">{{ user.username }}</span></span>
+            <a href="/blog-list" class="btn-nav btn-nav-outline">Archive</a>
+            <a href="/logout" class="btn-nav btn-nav-ghost">Logout</a>
         </div>
     </nav>
 
-    <div class="hero-container">
-        <h1 class="hero-h1">Video to Editorial.</h1>
-        <p class="hero-p">Turn technical YouTube streams into professional synthesized publications.</p>
-        
-        <div class="search-utility">
-            <input type="url" id="youtubeLink" class="search-input" placeholder="Paste YouTube link here..." required>
-            <button id="generateBlogButton" class="btn-action">Generate</button>
-        </div>
-
-        <div id="loading-container" style="display: none; margin-top: 2rem; align-items: center; justify-content: center; gap: 12px;">
-            <div class="spinner"></div>
-            <span id="loadingText" style="color: var(--text-sub); font-size: 0.9rem;">Initializing...</span>
-        </div>
-
-        <section id="blogOutput" class="reader-container">
-            <div class="reader-card">
-                <div id="blogContent" class="editorial-body"></div>
+    <!-- ── MAIN DASHBOARD ── -->
+    <main class="main-content">
+        <div class="card">
+            <div class="hero-section">
+                <h1 class="hero-title">Video to Article Automation</h1>
+                <p class="hero-description">
+                    Provide a YouTube link to process the video transcript 
+                    and generate a structured, professional article in real-time.
+                </p>
             </div>
-        </section>
-    </div>
 
+            <!-- YouTube URL Submission -->
+            <div class="input-section">
+                <h3>Video Source</h3>
+                <div class="input-group" id="inputGroup">
+                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+                    <button id="generateBlogButton" class="btn btn-primary">
+                        Generate Article
+                    </button>
+                </div>
+            </div>
+
+            <!-- REAL-TIME PROGRESS FEEDBACK
+                 This section is hidden by default and activated via JavaScript
+                 when a generation request begins. -->
+            <div id="loading-container" class="loading-container">
+                <div class="spinner"></div>
+                <span class="loading-text" id="loadingText">Connecting to source...</span>
+            </div>
+
+            <!-- ARTICLE OUTPUT
+                 Dynamic container that expands to show the AI-generated results. -->
+            <div id="blogOutput" class="blog-output">
+                <div class="blog-output-header">
+                    <div class="status-dot"></div>
+                    Processing Complete
+                </div>
+                <div id="blogContent" class="blog-content"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
+    </footer>
+
+    <!-- Global Toast notification for errors/success messages -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ── CORE FRONTEND LOGIC ── -->
     <script>
+        /**
+         * SECURITY: CSRF UTILITY
+         * Django requires a CSRF token for all non-GET requests to prevent 
+         * Cross-Site Request Forgery. This function parses the document cookies 
+         * to find the 'csrftoken' value.
+         */
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -59,33 +135,65 @@
             return cookieValue;
         }
         const csrftoken = getCookie('csrftoken');
+        
+        /**
+         * UI STATE MANAGEMENT
+         * Manages the visibility of the loading spinner and disables the button 
+         * to prevent duplicate submissions while a request is in flight.
+         */
+        function setLoading(active) {
+            const container = document.getElementById('loading-container');
+            const btn = document.getElementById('generateBlogButton');
+            if (active) {
+                container.classList.add('active');
+                btn.disabled = true;
+            } else {
+                container.classList.remove('active');
+                btn.disabled = false;
+            }
+        }
 
+        /**
+         * PERSISTENCE: HYDRATION ON LOAD
+         * When the user reloads the page, we want to restore their previous session data 
+         * so they don't lose their work. We pull this from the browser's localStorage.
+         */
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem('cf_last_url');
             const savedContent = localStorage.getItem('cf_last_content');
-            if (savedUrl) document.getElementById('youtubeLink').value = savedUrl;
+            
+            if (savedUrl) {
+                document.getElementById('youtubeLink').value = savedUrl;
+            }
+            
             if (savedContent) {
-                document.getElementById('blogContent').innerHTML = savedContent;
-                document.getElementById('blogOutput').style.display = 'block';
+                const blogContent = document.getElementById('blogContent');
+                const blogOutput = document.getElementById('blogOutput');
+                blogContent.innerHTML = savedContent;
+                blogOutput.classList.add('active');
             }
         });
 
+        // Track input changes to save the URL in real-time
         document.getElementById('youtubeLink').addEventListener('input', (e) => {
             localStorage.setItem('cf_last_url', e.target.value.trim());
         });
 
+        /**
+         * MAIN GENERATION PIPELINE
+         * This uses polling to check the status of a background task.
+         */
         document.getElementById('generateBlogButton').addEventListener('click', async () => {
             const youtubeLink = document.getElementById('youtubeLink').value.trim();
             const blogContent = document.getElementById('blogContent');
             const blogOutput = document.getElementById('blogOutput');
-            const loadingContainer = document.getElementById('loading-container');
             const loadingText = document.getElementById('loadingText');
 
             if (!youtubeLink) return;
 
-            blogOutput.style.display = 'none';
-            loadingContainer.style.display = 'flex';
-            document.getElementById('generateBlogButton').disabled = true;
+            setLoading(true);
+            blogOutput.classList.remove('active');
+            blogContent.innerHTML = '';
 
             try {
                 const response = await fetch('/generate-blog/', {
@@ -103,7 +211,7 @@
             } catch (error) {
                 console.error('Pipeline Error:', error);
                 alert('Error: ' + error.message);
-                resetUI();
+                setLoading(false);
             }
         });
 
@@ -120,13 +228,12 @@
                     if (data.status === 'COMPLETED') {
                         clearInterval(pollInterval);
                         blogContent.innerHTML = data.content;
-                        blogOutput.style.display = 'block';
-                        localStorage.setItem('cf_last_content', data.content);
-                        resetUI();
+                        blogOutput.classList.add('active');
+                        setLoading(false);
                     } else if (data.status === 'FAILED') {
                         clearInterval(pollInterval);
                         alert('Generation failed.');
-                        resetUI();
+                        setLoading(false);
                     } else {
                         loadingText.textContent = `${data.message} (${data.progress}%)`;
                     }
@@ -134,11 +241,6 @@
                     console.error("Polling error:", e);
                 }
             }, 2000);
-        }
-
-        function resetUI() {
-            document.getElementById('generateBlogButton').disabled = false;
-            document.getElementById('loading-container').style.display = 'none';
         }
     </script>
 </body>
