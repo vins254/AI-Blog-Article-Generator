@@ -102,12 +102,16 @@ body {
     border: 1px solid var(--border);
     color: var(--text-main);
     cursor: pointer;
-    padding: 0.35rem 0.6rem;
+    width: 32px;
+    height: 32px;
     border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 }
-.theme-toggle:hover { background-color: var(--bg-card); }
+.theme-toggle:hover { background-color: var(--bg-card); border-color: var(--accent); }
+.theme-toggle svg { width: 16px; height: 16px; }
 
 /* ── MAIN CONTENT ── */
 .main-content {
