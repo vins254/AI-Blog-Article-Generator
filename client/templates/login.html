@@ -36,9 +36,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — ContentFlow</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+<body>
     <div class="container">
         <main class="auth-container">
             <header class="section-header">
@@ -84,5 +85,17 @@
             </footer>
         </main>
     </div>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+        
+        // Theme Toggle
+        (function() {
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'dark');
+            html.setAttribute('data-theme', initialTheme);
+        })();
+    </script>
+</body>
 </html>

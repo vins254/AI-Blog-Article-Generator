@@ -39,6 +39,7 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+<body>
     <div class="container">
         <main class="auth-container">
             <header class="section-header">
@@ -95,7 +96,20 @@
             </footer>
         </main>
     </div>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+        
+        // Theme Toggle
+        (function() {
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'dark');
+            html.setAttribute('data-theme', initialTheme);
+        })();
+    </script>
+</body>
+</html>
 
     <script>
         const passwordInput = document.getElementById('password');
