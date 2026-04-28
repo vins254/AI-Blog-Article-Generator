@@ -67,7 +67,7 @@ def generate_blog(request):
     # 3. Hand off the heavy lifting to the background queue (Django-Q)
     # This call returns immediately, preventing the web thread from blocking.
     async_task(
-        'blog_generator.services.BlogService.process_video_to_blog',
+        'blog_generator.services.process_video_to_blog_task',
         request.user,
         yt_link,
         task_id=task_id

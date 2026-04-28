@@ -217,8 +217,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ── THIRD-PARTY API INTEGRATION ──
 # Keys are loaded from the .env file for security.
-load_dotenv(os.path.join(BASE_DIR, '.env'))
-
+# ── THIRD-PARTY API KEYS ──
+# These are loaded from the .env file in the server/ directory.
 ASSEMBLYAI_API_KEY = config("ASSEMBLYAI_API_KEY", default=None)
 OPENROUTER_API_KEY = config("OPENROUTER_API_KEY", default=None)
 
