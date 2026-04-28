@@ -70,7 +70,8 @@ def generate_blog(request):
         'blog_generator.services.process_video_to_blog_task',
         request.user,
         yt_link,
-        task_id=task_id
+        task_id=task_id,
+        ack_failure=True  # Don't retry automatically on failure
     )
 
     return JsonResponse({'task_id': task_id})

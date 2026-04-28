@@ -16,13 +16,9 @@ def process_video_to_blog_task(user, link, task_id=None):
     try:
         print(f"\n[PIPELINE] Starting generation for: {link}")
         
-        BlogService._update_progress(task_id, 10, "Reading the link and fetching video info...")
-        title = BlogService.get_video_title(link)
+        BlogService._update_progress(task_id, 20, "Reading the link and downloading audio...")
+        title, audio_path = BlogService.download_video_and_get_title(link)
         print(f"[PIPELINE] Video title: {title}")
-
-        BlogService._update_progress(task_id, 30, "Downloading the audio track from the video...")
-        print("[PIPELINE] Downloading audio...")
-        audio_path = BlogService.download_audio(link)
         print(f"[PIPELINE] Audio saved to: {audio_path}")
 
         BlogService._update_progress(task_id, 60, "Listening through the audio and converting it to text...")
@@ -72,46 +68,31 @@ class BlogService:
             )
 
     @staticmethod
-    def get_video_title(link):
-        ydl_opts = {
-            'quiet': True, 
-            'skip_download': True, 
-            'no_warnings': True,
-            'nocheckcertificate': True,
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'referer': 'https://www.google.com/',
-            'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web_embedded']}},
-        }
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(link, download=False)
-                if info:
-                    return info.get("title", "Untitled Video")
-                return "Untitled Video"
-        except Exception:
-            return "Untitled Video"
-
-    @staticmethod
-    def download_audio(link):
+    def download_video_and_get_title(link):
+        """
+        Combined method to fetch metadata and download in one pass.
+        """
         ydl_opts = {
             'format': 'ba/best',
             'outtmpl': os.path.join(settings.MEDIA_ROOT, '%(title)s.%(ext)s'),
             'noplaylist': True,
+            'nocheckcertificate': True,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'referer': 'https://www.google.com/',
+            'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web_embedded']}},
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
             }],
             'quiet': True,
             'no_warnings': True,
-            'nocheckcertificate': True,
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'referer': 'https://www.google.com/',
-            'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web_embedded']}},
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(link, download=True)
+            title = info.get("title", "Untitled Video")
             filename = ydl.prepare_filename(info)
-            return os.path.splitext(filename)[0] + ".mp3"
+            audio_path = os.path.splitext(filename)[0] + ".mp3"
+            return title, audio_path
 
     @staticmethod
     def transcribe_audio(audio_file_path):
