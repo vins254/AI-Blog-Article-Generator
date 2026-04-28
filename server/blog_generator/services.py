@@ -80,7 +80,7 @@ class BlogService:
             'nocheckcertificate': True,
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
             'referer': 'https://www.google.com/',
-            'extractor_args': {'youtube': {'player_client': ['web_embedded', 'ios']}},
+            'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web_embedded']}},
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -94,7 +94,7 @@ class BlogService:
     @staticmethod
     def download_audio(link):
         ydl_opts = {
-            'format': 'ba/b',
+            'format': 'ba/best',
             'outtmpl': os.path.join(settings.MEDIA_ROOT, '%(title)s.%(ext)s'),
             'noplaylist': True,
             'postprocessors': [{
@@ -106,7 +106,7 @@ class BlogService:
             'nocheckcertificate': True,
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
             'referer': 'https://www.google.com/',
-            'extractor_args': {'youtube': {'player_client': ['web_embedded', 'ios']}},
+            'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web_embedded']}},
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(link, download=True)
