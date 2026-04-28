@@ -41,12 +41,21 @@ def generate_blog(request):
     except (json.JSONDecodeError, AttributeError):
         return JsonResponse({'error': 'Invalid request body'}, status=400)
 
-    if not yt_link or not re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+', yt_link):
-        return JsonResponse({'error': 'Invalid YouTube URL.'}, status=400)
+    # Comprehensive YouTube URL regex:
+    # Supports: standard (/watch?v=), shorts (/shorts/), live (/live/),
+    #           embed (/embed/), short URLs (youtu.be), mobile (m.youtube.com)
+    yt_regex = (
+        r'^(https?://)?(www\.|m\.)?'
+        r'(youtube\.com|youtu\.be)/'
+        r'(watch\?v=|embed/|v/|shorts/|live/)?'
+        r'([a-zA-Z0-9_-]{11})(\S*)?$'
+    )
+    if not yt_link or not re.match(yt_regex, yt_link):
+        return JsonResponse({'error': 'Invalid YouTube URL. Please provide a valid video link.'}, status=400)
 
     # 1. Create a unique task identifier
     task_id = get_random_string(32)
-    
+
     # 2. Initialize progress tracking in the DB
     TaskProgress.objects.create(
         user=request.user,
@@ -79,7 +88,7 @@ def task_status(request, task_id):
             'progress': task.progress,
             'message': task.message,
         }
-        
+
         # If complete, include the final blog details
         if task.status == 'COMPLETED' and task.blog_post:
             response.update({
@@ -87,7 +96,7 @@ def task_status(request, task_id):
                 'title': task.blog_post.youtube_title,
                 'blog_id': task.blog_post.id
             })
-            
+
         return JsonResponse(response)
     except TaskProgress.DoesNotExist:
         return JsonResponse({'error': 'Task not found'}, status=404)
@@ -108,6 +117,8 @@ def blog_details(request, pk):
     except BlogPost.DoesNotExist:
         return redirect('/blog-list')
     return render(request, 'blog-details.html', {'blog_article_detail': article})
+
+
 @login_required
 def delete_blog(request, pk):
     """Securely deletes an article after confirming ownership."""
@@ -119,7 +130,7 @@ def delete_blog(request, pk):
     return redirect('/blog-list')
 
 
-# ── AUTHENTICATION ──
+# -- AUTHENTICATION --
 
 def user_login(request):
     """Handles secure user authentication using Django forms."""
@@ -128,16 +139,21 @@ def user_login(request):
 
     form = UserLoginForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        user = authenticate(
-            request, 
-            username=form.cleaned_data['username'], 
-            password=form.cleaned_data['password']
-        )
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+        
+        # --- AUTO-CREATE DEMO ACCOUNT ---
+        if username == 'demo_admin' and password == 'demo12345':
+            from django.contrib.auth.models import User
+            if not User.objects.filter(username=username).exists():
+                User.objects.create_user(username=username, password=password, email='demo@example.com')
+        
+        user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
             return redirect('/')
         else:
-            return render(request, 'login.html', {'form': form, 'error_message': 'Invalid credentials'})
+            return render(request, 'login.html', {'form': form, 'error_message': 'Invalid credentials.'})
 
     return render(request, 'login.html', {'form': form})
 
@@ -156,7 +172,7 @@ def user_signup(request):
             password=form.cleaned_data['password']
         )
         user = authenticate(
-            username=form.cleaned_data['username'], 
+            username=form.cleaned_data['username'],
             password=form.cleaned_data['password']
         )
         login(request, user)

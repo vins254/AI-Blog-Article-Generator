@@ -1,72 +1,40 @@
-{% comment %}
-  =============================================================================
-  FILE: client/templates/login.html
-  PURPOSE: The user login / authentication page. This is the gateway to the
-           application — unauthenticated users are redirected here automatically
-           by Django's @login_required decorator on all protected views.
-  =============================================================================
-
-  HOW IT WORKS:
-  - This template renders a simple HTML form with two fields: username & password.
-  - When the form is submitted (POST), Django's built-in authenticate() function
-    checks the credentials against the hashed passwords stored in the database.
-  - If authentication succeeds, the user is logged in via login() and redirected
-    to the main dashboard (/).
-  - If it fails, the view sends back an 'error_message' variable which this
-    template conditionally displays using the {% if error_message %} block.
-  - If the user is already logged in, the view skips all of this and redirects
-    them straight to the dashboard so they don't see the login page unnecessarily.
-
-  FEATURES & TOOLS:
-  - Django Template Language (DTL): {% if error_message %} for conditional
-    rendering of server-side error feedback without any JavaScript.
-  - {% csrf_token %}: Injects a hidden security token into the form. Django
-    will reject any POST request that doesn't include this token, protecting
-    against Cross-Site Request Forgery (CSRF) attacks.
-  - autocomplete attributes: Set to 'username' and 'current-password' to
-    tell the browser's password manager how to auto-fill fields correctly.
-  - {% load static %}: Allows us to load the shared styles.css from the
-    client/static/css/ directory using Django's static file resolver.
-  =============================================================================
-{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — ContentFlow</title>
-    <link rel="stylesheet" href="{% static 'css/styles' %}">
+    <title>Sign In — ContentFlow</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <div class="container">
         <main class="auth-container">
             <header class="section-header">
-                <div class="brand" style="margin-bottom: 2rem;">
+                <div class="brand" style="justify-content: center; margin-bottom: 2rem;">
                     <i data-lucide="layers" class="accent-text"></i>
                     ContentFlow<span class="brand-dot">.</span>
                 </div>
-                <h1>Sign in</h1>
-                <p class="text-secondary">Access your editorial workflow.</p>
+                <h1>Welcome Back</h1>
+                <p class="text-secondary">Sign in to manage your editorial pipeline.</p>
             </header>
 
             {% if error_message %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
+            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none; border-radius: var(--radius-md);">
                 {{ error_message }}
             </div>
             {% endif %}
 
             {% if form.errors %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
-                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none; border-radius: var(--radius-md);">
                 {% for field in form %}
                     {% for error in field.errors %}{{ error }}{% endfor %}
                 {% endfor %}
             </div>
             {% endif %}
 
-            <form method="POST" class="auth-form">
+            <form method="POST" class="auth-form" id="loginForm">
                 {% csrf_token %}
                 <div class="form-field">
                     <label for="username">Username</label>
@@ -76,25 +44,40 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required autocomplete="current-password">
                 </div>
-                <button type="submit">Continue</button>
+                <button type="submit">Sign In</button>
             </form>
 
-            <footer style="margin-top: 2rem; text-align: left; font-size: 0.9rem;">
-                <span class="text-secondary">New user?</span> 
-                <a href="/signup" class="accent-text" style="font-weight: 600; text-decoration: none;">Create account</a>
+            <div style="margin-top: 2rem; padding: 1.25rem; background: var(--accent-soft); border: 1px dashed var(--accent); border-radius: var(--radius-md); text-align: center;">
+                <p style="font-size: 0.85rem; font-weight: 600; color: var(--accent); margin-bottom: 0.75rem;">DEMO ACCOUNT</p>
+                <code style="display: block; font-size: 0.8rem; margin-bottom: 1rem; color: var(--text-primary);">user: demo_admin | pass: demo12345</code>
+                <button type="button" id="demoLoginBtn" class="btn-text" style="font-size: 0.9rem;">
+                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                    Quick Fill Demo
+                </button>
+            </div>
+
+            <footer style="margin-top: 2rem; text-align: center; font-size: 0.95rem;">
+                <span class="text-secondary">New here?</span> 
+                <a href="/signup" class="accent-text" style="font-weight: 600; margin-left: 0.5rem;">Create an account</a>
             </footer>
         </main>
     </div>
     <script>
         lucide.createIcons();
-        
-        // Theme Toggle
         (function() {
             const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'dark');
-            html.setAttribute('data-theme', initialTheme);
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-theme', savedTheme);
+
+            const demoBtn = document.getElementById('demoLoginBtn');
+            if (demoBtn) {
+                demoBtn.addEventListener('click', () => {
+                    document.getElementById('username').value = 'demo_admin';
+                    document.getElementById('password').value = 'demo12345';
+                    // Optional: auto-submit
+                    // document.getElementById('loginForm').submit();
+                });
+            }
         })();
     </script>
 </body>

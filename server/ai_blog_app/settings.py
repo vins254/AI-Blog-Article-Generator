@@ -71,6 +71,10 @@ import dj_database_url
 from dotenv import load_dotenv
 from decouple import config
 
+# ── LOAD ENVIRONMENT VARIABLES ──
+# This ensures that variables in your .env file are available in os.environ
+load_dotenv()
+
 # ── PROJECT PATHS ──
 # BASE_DIR points to the root of the project (where manage.py lives).
 # BASE_DIR points to the 'server' directory.

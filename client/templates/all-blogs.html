@@ -1,35 +1,6 @@
-{% comment %}
-  =============================================================================
-  FILE: client/templates/all-blogs.html
-  PURPOSE: The "Article Archive" page — shows every article the logged-in
-           user has ever generated, listed from newest to oldest.
-  =============================================================================
-
-  HOW IT WORKS:
-  - Django's view (blog_list in views.py) queries the BlogPost model and passes
-    a list called 'blog_articles' into this template.
-  - We loop over that list using Django's {% for %} tag to build the card grid.
-  - The {% empty %} tag handles the edge case where the user has no articles yet,
-    giving them a friendly prompt to go create their first one.
-
-  FEATURES & TOOLS:
-  - Django Template Language (DTL): {% for %}, {% empty %}, {% endfor %},
-    {{ variable }} syntax for server-side HTML rendering.
-  - `|truncatechars:120` filter: Automatically shortens the article preview
-    text to 120 characters so the list stays clean and scannable.
-  - `|length` and `|pluralize` filters: Dynamically display "1 record" vs
-    "3 records" without any extra Python code.
-  - `|date:"M d, Y"` filter: Formats the stored UTC timestamp into a
-    human-friendly string like "Apr 25, 2026".
-  - Security: This page is protected by the @login_required decorator in
-    views.py. Unauthenticated users are redirected to /login automatically.
-  - `{% load static %}`: Enables the {% static %} tag so we can reference
-    the CSS file from client/static/ correctly regardless of deployment environment.
-  =============================================================================
-{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,7 +9,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="brand">
             <i data-lucide="layers" class="accent-text"></i>
@@ -48,22 +18,8 @@
             <a href="/" class="btn-nav">New Article</a>
             <a href="/logout" class="btn-nav">Logout</a>
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                <!-- Moon icon for dark mode -->
-                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-                <!-- Sun icon for light mode -->
-                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
+                <i data-lucide="sun" class="sun-icon"></i>
+                <i data-lucide="moon" class="moon-icon"></i>
             </button>
         </div>
     </nav>
@@ -78,7 +34,7 @@
 
             <div class="archive-grid">
                 {% for article in blog_articles reversed %}
-                <article class="card archive-item">
+                <article class="card">
                     <div class="article-meta">
                         <span>{{ article.created_at|date:"M d, Y" }}</span>
                         <span class="dot">·</span>
@@ -91,23 +47,25 @@
                         {{ article.generated_content|truncatechars:160 }}
                     </p>
                     <div class="archive-actions">
-                        <a href="/blog-details/{{ article.id }}/" class="btn-text">
-                            Read Publication <i data-lucide="arrow-right" style="width:14px; height:14px;"></i>
+                        <a href="/blog-details/{{ article.id }}/" class="btn-text accent-text">
+                            Read Publication <i data-lucide="arrow-right" style="width:14px; height:14px; vertical-align: middle;"></i>
                         </a>
                         <a href="/delete-blog/{{ article.id }}/" 
                            class="btn-text" 
-                           style="color: #ef4444; margin-left: 1.5rem;"
-                           onclick="return confirm('Are you sure you want to permanently delete this publication?')">
-                            Delete
+                           style="color: #ef4444;"
+                           onclick="return confirm('Permanently delete this publication?')">
+                            <i data-lucide="trash-2" style="width:14px; height:14px; vertical-align: middle;"></i>
                         </a>
                     </div>
                 </article>
                 {% empty %}
-                <div class="card empty-state">
-                    <i data-lucide="folder-open" style="width:32px; height:32px; color:var(--text-muted); margin-bottom:1rem;"></i>
+                <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+                    <i data-lucide="folder-open" style="width:48px; height:48px; color:var(--text-muted); margin-bottom:1.5rem;"></i>
                     <h3>No records found</h3>
-                    <p class="text-secondary">The system has no historical processing data for this account.</p>
-                    <a href="/" class="btn" style="display:inline-block; margin-top:1.5rem;">Start First Workflow</a>
+                    <p class="text-secondary">Start a new workflow to see your articles here.</p>
+                    <a href="/" class="btn-text accent-text" style="display:inline-block; margin-top:2rem; font-size: 1.1rem;">
+                        Create Your First Article
+                    </a>
                 </div>
                 {% endfor %}
             </div>
@@ -116,30 +74,19 @@
 
     <script>
         lucide.createIcons();
-        
-        // Theme Toggle
         (function() {
             const themeToggle = document.getElementById('themeToggle');
             const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'dark');
-            html.setAttribute('data-theme', initialTheme);
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-theme', savedTheme);
             
-            if (themeToggle) {
-                themeToggle.addEventListener('click', () => {
-                    const currentTheme = html.getAttribute('data-theme');
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    html.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('theme', newTheme);
-                });
-            }
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
         })();
     </script>
-
-    <!-- Footer -->
-    <footer class="footer">
-        &copy; 2026 ContentFlow — Part of the <a href="https://github.com/vins254" target="_blank" rel="noopener">vins254</a> suite.
-    </footer>
 </body>
 </html>

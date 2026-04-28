@@ -1,59 +1,15 @@
-{% comment %}
-  =============================================================================
-  FILE: client/templates/index.html
-  PURPOSE: The main application dashboard — the page where users paste a
-           YouTube URL and trigger the full AI article generation pipeline.
-           This is the most complex template in the project.
-  =============================================================================
-
-  HOW IT WORKS:
-  1. The user pastes a YouTube URL into the input field and clicks "Generate Article".
-  2. A JavaScript fetch() POST request is sent to the /generate-blog endpoint
-     with the URL and the Django CSRF token in the headers.
-  3. The Django backend returns a Streaming HTTP Response using NDJSON format
-     (Newline Delimited JSON — one JSON object per line).
-  4. The JavaScript reads the stream chunk by chunk using a ReadableStream reader,
-     updating the progress bar text for each step (1/4, 2/4, 3/4, 4/4).
-  5. When the final step (step 5) arrives, the full article Markdown is converted
-     to HTML using a lightweight regex parser and injected into the page.
-  6. Both the URL and the final article are saved to localStorage so the user's
-     work is restored automatically if they refresh the page.
-
-  FEATURES & TOOLS:
-  - Fetch API + ReadableStream: Enables real-time server-sent data without
-    using WebSockets or SSE. We read the response body incrementally.
-  - NDJSON Streaming: The backend yields one JSON line per stage, and we
-    parse each line as it arrives to update the UI progressively.
-  - CSRF Security: The getCookie() function reads Django's csrftoken from
-    the browser cookie and sends it in the X-CSRFToken request header.
-  - LocalStorage Persistence: URL input is saved on every keystroke
-    (cf_last_url). Generated HTML article is saved after step 5 completes
-    (cf_last_content). Both are restored on DOMContentLoaded, so a page
-    reload brings the user back to exactly where they were.
-  - Lightweight Markdown-to-HTML Parser: A chain of .replace() regex calls
-    converts **bold**, # headings, and - lists from the AI output into
-    real HTML tags before injecting into the DOM.
-  - {% load static %} / {% static %}: Resolves the CSS path correctly
-    in both local development and production environments.
-  =============================================================================
-{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Automate your content workflow by converting YouTube videos into structured articles.">
-    <title>ContentFlow — Video Content Automation</title>
-    
-    <!-- Design System -->
+    <meta name="description" content="Turn any YouTube video into a well-structured written article in minutes.">
+    <title>ContentFlow — YouTube to Article</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <!-- ── NAVIGATION ── -->
     <nav class="navbar">
         <div class="brand">
             <i data-lucide="layers" class="accent-text"></i>
@@ -63,86 +19,76 @@
             <a href="/blog-list" class="btn-nav">My Articles</a>
             <a href="/logout" class="btn-nav">Logout</a>
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                <!-- Moon icon for dark mode -->
-                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-                <!-- Sun icon for light mode -->
-                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
+                <i data-lucide="sun" class="sun-icon"></i>
+                <i data-lucide="moon" class="moon-icon"></i>
             </button>
         </div>
     </nav>
 
     <div class="container">
-        <!-- ── DASHBOARD ── -->
         <main class="dashboard">
+
+            <!-- ── HERO INPUT ── -->
             <section class="input-section">
                 <header class="section-header">
-                    <span class="badge">Workflow Engine</span>
-                    <h1>Video to Editorial Article</h1>
-                    <p class="text-secondary">Transform technical speech into structured, readable publications.</p>
+                    <h1>Turn any YouTube video into an article</h1>
+                    <p class="text-secondary">Paste the link below. We'll handle the rest — no editing needed.</p>
                 </header>
 
                 <div class="input-group" id="inputGroup">
-                    <input type="url" id="youtubeLink" placeholder="Paste YouTube URL..." autocomplete="off">
-                    <button id="generateBlogButton">
-                        Generate
-                    </button>
+                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+                    <button id="generateBlogButton">Generate</button>
                 </div>
+                <p class="input-hint text-secondary">Supports standard links, YouTube Shorts, and live recordings.</p>
             </section>
 
-            <!-- ── PIPELINE (SYSTEM VISIBILITY) ── -->
+            <!-- ── PROGRESS STEPS ── -->
             <section id="pipeline-ui" class="pipeline-container">
+                <p class="pipeline-heading">Working on your article&hellip;</p>
                 <div class="progress-bar">
                     <div id="progress-inner" class="progress-inner"></div>
                 </div>
-
                 <div class="pipeline-steps">
                     <div class="pipeline-step" id="step-1">
-                        <div class="step-marker">1</div>
-                        <div class="step-details">
-                            <span class="step-label">Analysis</span>
-                            <span class="step-log" id="log-1">Identifying video source...</span>
+                        <div class="step-marker">
+                            <i data-lucide="search" style="width:16px;height:16px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Reading the link</span>
+                            <span class="step-sub" id="sub-1">Finding the video&hellip;</span>
                         </div>
                     </div>
-                    
                     <div class="pipeline-step" id="step-2">
-                        <div class="step-marker">2</div>
-                        <div class="step-details">
-                            <span class="step-label">Extraction</span>
-                            <span class="step-log" id="log-2">Pulling audio from stream...</span>
+                        <div class="step-marker">
+                            <i data-lucide="download" style="width:16px;height:16px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Grabbing the audio</span>
+                            <span class="step-sub" id="sub-2">Downloading the track&hellip;</span>
                         </div>
                     </div>
-
                     <div class="pipeline-step" id="step-3">
-                        <div class="step-marker">3</div>
-                        <div class="step-details">
-                            <span class="step-label">Transcription</span>
-                            <span class="step-log" id="log-3">Turning speech into text...</span>
+                        <div class="step-marker">
+                            <i data-lucide="mic" style="width:16px;height:16px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Listening carefully</span>
+                            <span class="step-sub" id="sub-3">Converting speech to text&hellip;</span>
                         </div>
                     </div>
-
                     <div class="pipeline-step" id="step-4">
-                        <div class="step-marker">4</div>
-                        <div class="step-details">
-                            <span class="step-label">Synthesis</span>
-                            <span class="step-log" id="log-4">Structuring article draft...</span>
+                        <div class="step-marker">
+                            <i data-lucide="pen-line" style="width:16px;height:16px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Writing the article</span>
+                            <span class="step-sub" id="sub-4">Putting it all together&hellip;</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- ── ARTICLE READER (PUBLICATION FEEL) ── -->
+            <!-- ── ARTICLE OUTPUT ── -->
             <section id="blogOutput" class="blog-output-section" style="display: none;">
                 <div class="article-header">
                     <div class="article-meta">
@@ -150,203 +96,209 @@
                         <span class="dot">·</span>
                         <span id="read-time"></span>
                         <span class="dot">·</span>
-                        <a id="video-source" href="#" target="_blank" class="accent-text">Original Video</a>
+                        <a id="video-source" href="#" target="_blank" class="accent-text">Watch original</a>
                     </div>
                     <h1 id="article-title"></h1>
                 </div>
                 <div id="blogContent" class="article-body"></div>
             </section>
+
         </main>
     </div>
 
-    <div id="toast" class="toast"></div>
-
-    <!-- ── CORE FRONTEND LOGIC ── -->
     <script>
-        /**
-         * SECURITY: CSRF UTILITY
-         * Django requires a CSRF token for all non-GET requests to prevent 
-         * Cross-Site Request Forgery. This function parses the document cookies 
-         * to find the 'csrftoken' value.
-         */
-        // Initialize Lucide Icons
         lucide.createIcons();
 
-        // ═══════════════════════════════════════════════════════════════
-        // THEME TOGGLE FUNCTIONALITY
-        // ═══════════════════════════════════════════════════════════════
+        // ── Theme Engine ──────────────────────────────────────────────────
         (function() {
             const themeToggle = document.getElementById('themeToggle');
             const html = document.documentElement;
-            
-            // Check for saved theme preference or default to dark
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            // Set initial theme
-            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'dark');
-            html.setAttribute('data-theme', initialTheme);
-            
-            // Toggle click handler
+            html.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
             themeToggle.addEventListener('click', () => {
-                const currentTheme = html.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                html.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-            });
-            
-            // Listen for system theme changes
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                if (!localStorage.getItem('theme')) {
-                    html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-                }
+                const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
             });
         })();
 
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+        // ── YouTube URL Validation ────────────────────────────────────────
+        function isValidYouTube(url) {
+            const re = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|shorts\/|live\/)?([a-zA-Z0-9_-]{11})(\S*)?$/;
+            return re.test(url.trim());
+        }
+
+        // ── CSRF helper ───────────────────────────────────────────────────
+        function getCsrf() {
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        // ── Pipeline UI ───────────────────────────────────────────────────
+        const stepMessages = {
+            1: ["Finding the video...", "Checking the link...", "Got it, loading video info..."],
+            2: ["Grabbing the audio track...", "Downloading...", "Almost done downloading..."],
+            3: ["Listening to what was said...", "Converting speech to text...", "Reading through the words..."],
+            4: ["Putting the article together...", "Writing things out...", "Adding the finishing touches..."]
+        };
+
+        function updatePipeline(step) {
+            document.getElementById('pipeline-ui').classList.add('active');
+            const progressMap = { 1: 18, 2: 42, 3: 68, 4: 90, 5: 100 };
+            document.getElementById('progress-inner').style.width = `${progressMap[step] || step * 20}%`;
+
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`step-${i}`);
+                if (i < step) {
+                    el.classList.add('active', 'done');
+                } else if (i === step) {
+                    el.classList.add('active');
+                    el.classList.remove('done');
+                    // rotate through human messages
+                    const msgs = stepMessages[i];
+                    const sub = document.getElementById(`sub-${i}`);
+                    if (sub && msgs) {
+                        let idx = 0;
+                        clearInterval(el._msgTimer);
+                        sub.textContent = msgs[0];
+                        el._msgTimer = setInterval(() => {
+                            idx = (idx + 1) % msgs.length;
+                            sub.textContent = msgs[idx];
+                        }, 3000);
                     }
+                } else {
+                    el.classList.remove('active', 'done');
                 }
             }
-            return cookieValue;
-        }
-        const csrftoken = getCookie('csrftoken');
-        
-        function updatePipeline(step, msg) {
-            const container = document.getElementById('pipeline-ui');
-            const progressBar = document.getElementById('progress-inner');
-            container.classList.add('active');
-            
-            // Highlight current step
-            const stepEl = document.getElementById(`step-${step}`);
-            if (stepEl) {
-                stepEl.classList.add('active');
-            }
-
-            // Update log message if provided
-            const logEl = document.getElementById(`log-${step}`);
-            if (logEl && msg) {
-                logEl.textContent = msg;
-            }
-
-            // Update progress bar
-            progressBar.style.width = `${(step / 4) * 100}%`;
         }
 
         function resetPipeline() {
             document.getElementById('pipeline-ui').classList.remove('active');
             document.getElementById('progress-inner').style.width = '0%';
-            document.querySelectorAll('.pipeline-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.pipeline-step').forEach(el => {
+                el.classList.remove('active', 'done');
+                clearInterval(el._msgTimer);
+            });
         }
 
+        // ── State Persistence ─────────────────────────────────────────────
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem('cf_last_url');
             const savedContent = JSON.parse(localStorage.getItem('cf_last_content') || 'null');
-            
             if (savedUrl) document.getElementById('youtubeLink').value = savedUrl;
-            
-            if (savedContent) {
-                renderArticle(savedContent.title, savedContent.html, savedContent.url);
-            }
+            if (savedContent) renderArticle(savedContent.title, savedContent.html, savedContent.url);
         });
 
+        // ── Render Article ────────────────────────────────────────────────
         function renderArticle(title, html, url) {
-            const blogOutput = document.getElementById('blogOutput');
-            const blogContent = document.getElementById('blogContent');
-            const titleEl = document.getElementById('article-title');
-            const dateEl = document.getElementById('article-date');
-            const readTimeEl = document.getElementById('read-time');
-            const sourceEl = document.getElementById('video-source');
+            document.getElementById('article-title').textContent = title;
+            document.getElementById('blogContent').innerHTML = html.replace(/\n\n/g, '<br><br>');
+            document.getElementById('article-date').textContent = new Date().toLocaleDateString('en-US', {
+                month: 'long', day: 'numeric', year: 'numeric'
+            });
+            document.getElementById('video-source').href = url;
 
-            titleEl.textContent = title;
-            blogContent.innerHTML = html;
-            dateEl.textContent = "Processed recently";
-            sourceEl.href = url;
-            
-            // Estimate reading time (200 wpm)
-            const words = blogContent.innerText.split(/\s+/).length;
-            const time = Math.max(1, Math.ceil(words / 200));
-            readTimeEl.textContent = `${time} min read`;
+            const words = document.getElementById('blogContent').innerText.split(/\s+/).length;
+            document.getElementById('read-time').textContent = `${Math.max(1, Math.ceil(words / 200))} min read`;
 
-            blogOutput.style.display = 'block';
+            const output = document.getElementById('blogOutput');
+            output.style.display = 'block';
+            output.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        // ── Input validation feedback ─────────────────────────────────────
         document.getElementById('youtubeLink').addEventListener('input', (e) => {
-            localStorage.setItem('cf_last_url', e.target.value.trim());
+            const url = e.target.value.trim();
+            localStorage.setItem('cf_last_url', url);
+            document.getElementById('inputGroup').style.borderColor =
+                url && !isValidYouTube(url) ? 'var(--danger)' : '';
         });
 
+        // ── Generate ──────────────────────────────────────────────────────
         document.getElementById('generateBlogButton').addEventListener('click', async () => {
-            const youtubeLink = document.getElementById('youtubeLink').value.trim();
+            const url = document.getElementById('youtubeLink').value.trim();
             const btn = document.getElementById('generateBlogButton');
 
-            if (!youtubeLink) return;
+            if (!url) {
+                document.getElementById('youtubeLink').focus();
+                return;
+            }
+            if (!isValidYouTube(url)) {
+                document.getElementById('inputGroup').style.borderColor = 'var(--danger)';
+                alert("Please paste a valid YouTube link (e.g. youtube.com/watch?v=... or youtu.be/...)");
+                return;
+            }
 
+            // Reset UI
             btn.disabled = true;
-            btn.textContent = "Processing...";
+            btn.textContent = "Working...";
             document.getElementById('blogOutput').style.display = 'none';
+            document.getElementById('inputGroup').style.borderColor = '';
             resetPipeline();
 
             try {
-                // 1. Trigger the background task
-                const response = await fetch('/generate-blog', {
+                // Step 1 — kick off the task
+                updatePipeline(1);
+                const res = await fetch('/generate-blog', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-                    body: JSON.stringify({ link: youtubeLink })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrf()
+                    },
+                    body: JSON.stringify({ link: url })
                 });
 
-                if (!response.ok) throw new Error('Failed to start generation');
-                const { task_id } = await response.json();
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Something went wrong. Please try again.');
+                }
 
-                // 2. Poll for status updates
-                const pollInterval = setInterval(async () => {
+                const { task_id } = await res.json();
+
+                // Poll every 2.5 s
+                const poll = setInterval(async () => {
                     try {
-                        const statusRes = await fetch(`/task-status/${task_id}/`);
-                        if (!statusRes.ok) throw new Error('Status check failed');
-                        
-                        const data = await statusRes.json();
-                        
-                        // Update UI based on progress
-                        const step = Math.min(4, Math.floor(data.progress / 25) + 1);
-                        updatePipeline(step, data.message);
-                        document.getElementById('progress-inner').style.width = `${data.progress}%`;
+                        const sr = await fetch(`/task-status/${task_id}/`);
+                        if (!sr.ok) return;
+                        const d = await sr.json();
 
-                        if (data.status === 'COMPLETED') {
-                            clearInterval(pollInterval);
-                            
-                            // Render final article
-                            renderArticle(data.title, data.content, youtubeLink);
-                            localStorage.setItem('cf_last_content', JSON.stringify({
-                                title: data.title,
-                                html: data.content,
-                                url: youtubeLink
-                            }));
-                            
-                            btn.disabled = false;
-                            btn.textContent = "Generate";
-                            document.getElementById('pipeline-ui').classList.remove('active');
-                        } else if (data.status === 'FAILED') {
-                            clearInterval(pollInterval);
-                            alert(`Generation failed: ${data.message}`);
+                        // Map progress % to step number
+                        let step = 1;
+                        if (d.progress >= 30) step = 2;
+                        if (d.progress >= 60) step = 3;
+                        if (d.progress >= 80) step = 4;
+                        updatePipeline(step);
+
+                        if (d.status === 'COMPLETED') {
+                            clearInterval(poll);
+                            // Clear running message timers
+                            document.querySelectorAll('.pipeline-step').forEach(el => clearInterval(el._msgTimer));
+                            document.getElementById('progress-inner').style.width = '100%';
+
+                            setTimeout(() => {
+                                resetPipeline();
+                                renderArticle(d.title, d.content, url);
+                                localStorage.setItem('cf_last_content', JSON.stringify({
+                                    title: d.title, html: d.content, url
+                                }));
+                                btn.disabled = false;
+                                btn.textContent = "Generate";
+                            }, 600);
+
+                        } else if (d.status === 'FAILED') {
+                            clearInterval(poll);
+                            resetPipeline();
+                            alert(`Something went wrong: ${d.message || 'Please try again.'}`);
                             btn.disabled = false;
                             btn.textContent = "Generate";
                         }
-                    } catch (e) {
-                        clearInterval(pollInterval);
-                        console.error("Polling error:", e);
+                    } catch (_) {
+                        // network blip — keep polling
                     }
-                }, 2000); // Poll every 2 seconds
+                }, 2500);
 
-            } catch (error) {
-                console.error('Task Error:', error);
-                alert('Could not initialize processing. Please check the URL.');
+            } catch (err) {
+                resetPipeline();
+                alert(err.message);
                 btn.disabled = false;
                 btn.textContent = "Generate";
             }

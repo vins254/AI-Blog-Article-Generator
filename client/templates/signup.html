@@ -1,41 +1,10 @@
-{% comment %}
-  =============================================================================
-  FILE: client/templates/signup.html
-  PURPOSE: New user registration page. Allows visitors to create a ContentFlow
-           account. After successful signup, the user is immediately logged in
-           and redirected to the main dashboard without an extra step.
-  =============================================================================
-
-  HOW IT WORKS:
-  - Renders a form with four fields: username, email, password, confirm password.
-  - On POST submission, the view (user_signup in views.py) runs full server-side
-    validation: checks for empty fields, username format, password match, username
-    uniqueness, and Django's built-in password strength policies.
-  - If any check fails, the specific error message is passed back and shown inline.
-  - On success, User.objects.create_user() is called (which automatically hashes
-    the password using PBKDF2 — never stored as plain text).
-
-  FEATURES & TOOLS:
-  - Live Password Strength Indicator: A small <script> block at the bottom of
-    this file listens to each keystroke on the password field. It awards "strength
-    points" for length (>= 8 chars), uppercase letters, digits, and special chars.
-    The CSS class on the strength bar (weak / medium / strong) is swapped in
-    real time to give the user instant visual feedback.
-  - {% csrf_token %}: Required security token for POST form submission.
-  - Django Template Language (DTL): {% if error_message %} block shows
-    validation errors returned from the server without a full page reload.
-  - autocomplete="new-password": Tells password managers this is a registration
-    form so they offer to save the new credential, not auto-fill an old one.
-  - {% load static %}: Loads the shared stylesheet from client/static/css/.
-  =============================================================================
-{% endcomment %}
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — ContentFlow</title>
+    <title>Create Account — ContentFlow</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -43,23 +12,22 @@
     <div class="container">
         <main class="auth-container">
             <header class="section-header">
-                <div class="brand" style="margin-bottom: 2rem;">
+                <div class="brand" style="justify-content: center; margin-bottom: 2rem;">
                     <i data-lucide="layers" class="accent-text"></i>
                     ContentFlow<span class="brand-dot">.</span>
                 </div>
-                <h1>Create Account</h1>
-                <p class="text-secondary">Join the editorial automation workflow.</p>
+                <h1>Join ContentFlow</h1>
+                <p class="text-secondary">Automate your video-to-article workflow.</p>
             </header>
 
             {% if error_message %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
+            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none; border-radius: var(--radius-md);">
                 {{ error_message }}
             </div>
             {% endif %}
 
             {% if form.errors %}
-            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none;">
-                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none; border-radius: var(--radius-md);">
                 {% for field in form %}
                     {% for error in field.errors %}{{ error }}{% endfor %}
                 {% endfor %}
@@ -70,7 +38,7 @@
                 {% csrf_token %}
                 <div class="form-field">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username" minlength="3" pattern="^[a-zA-Z0-9_]+$">
+                    <input type="text" id="username" name="username" required autocomplete="username">
                 </div>
                 <div class="form-field">
                     <label for="email">Email Address</label>
@@ -78,72 +46,28 @@
                 </div>
                 <div class="form-field">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="new-password" minlength="8">
-                    <div class="progress-bar" style="height: 1px; margin-top: 0.25rem;">
-                        <div id="passwordStrengthBar" class="progress-inner" style="width: 0%; background: var(--text-muted);"></div>
-                    </div>
+                    <input type="password" id="password" name="password" required autocomplete="new-password">
                 </div>
                 <div class="form-field">
                     <label for="repeatPassword">Confirm Password</label>
-                    <input type="password" id="repeatPassword" name="repeatPassword" required autocomplete="new-password" minlength="8">
+                    <input type="password" id="repeatPassword" name="repeatPassword" required autocomplete="new-password">
                 </div>
                 <button type="submit">Create Account</button>
             </form>
 
-            <footer style="margin-top: 2rem; text-align: left; font-size: 0.9rem;">
+            <footer style="margin-top: 2rem; text-align: center; font-size: 0.95rem;">
                 <span class="text-secondary">Already a member?</span> 
-                <a href="/login" class="accent-text" style="font-weight: 600; text-decoration: none;">Sign in</a>
+                <a href="/login" class="accent-text" style="font-weight: 600; margin-left: 0.5rem;">Sign in</a>
             </footer>
         </main>
     </div>
     <script>
         lucide.createIcons();
-        
-        // Theme Toggle
         (function() {
             const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'dark');
-            html.setAttribute('data-theme', initialTheme);
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-theme', savedTheme);
         })();
-    </script>
-</body>
-</html>
-
-    <script>
-        const passwordInput = document.getElementById('password');
-        const strengthBar = document.getElementById('passwordStrengthBar');
-
-        passwordInput.addEventListener('input', () => {
-            const val = passwordInput.value;
-            let strength = 0;
-            if (val.length >= 8) strength++;
-            if (/[A-Z]/.test(val)) strength++;
-            if (/[0-9]/.test(val)) strength++;
-            if (/[^A-Za-z0-9]/.test(val)) strength++;
-
-            strengthBar.style.width = (val.length > 0 ? (strength + 1) * 20 : 0) + '%';
-            
-            if (strength <= 1) strengthBar.style.background = '#ef4444';
-            else if (strength === 2 || strength === 3) strengthBar.style.background = '#eab308';
-            else if (strength >= 4) strengthBar.style.background = 'var(--accent)';
-            checkMatch();
-        });
-
-        const repeatInput = document.getElementById('repeatPassword');
-        function checkMatch() {
-            if (!repeatInput.value) {
-                repeatInput.style.borderColor = 'var(--border)';
-                return;
-            }
-            if (passwordInput.value === repeatInput.value) {
-                repeatInput.style.borderColor = 'var(--accent)';
-            } else {
-                repeatInput.style.borderColor = '#ef4444';
-            }
-        }
-        repeatInput.addEventListener('input', checkMatch);
     </script>
 </body>
 </html>

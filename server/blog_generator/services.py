@@ -7,18 +7,18 @@ import assemblyai as aai
 from django.conf import settings
 from .models import BlogPost, TaskProgress
 
+
 class BlogService:
     """
-    A service layer that handles the core business logic of the application.
-    Now supports background task progress tracking.
+    Core service layer — handles video processing, transcription, and article writing.
     """
 
     @staticmethod
     def _update_progress(task_id, progress, message, status='RUNNING', blog_post=None):
         if task_id:
             TaskProgress.objects.filter(task_id=task_id).update(
-                progress=progress, 
-                message=message, 
+                progress=progress,
+                message=message,
                 status=status,
                 blog_post=blog_post
             )
@@ -26,35 +26,46 @@ class BlogService:
     @classmethod
     def process_video_to_blog(cls, user, link, task_id=None):
         """
-        Master method intended for background execution.
+        Main processing method — runs in the background via Django-Q.
         """
         try:
-            cls._update_progress(task_id, 10, "Identifying video source...")
+            print(f"\n[PIPELINE] Starting generation for: {link}")
+            
+            cls._update_progress(task_id, 10, "Reading the link and fetching video info...")
             title = cls.get_video_title(link)
-            
-            cls._update_progress(task_id, 30, "Pulling audio from stream...")
+            print(f"[PIPELINE] Video title: {title}")
+
+            cls._update_progress(task_id, 30, "Downloading the audio track from the video...")
+            print("[PIPELINE] Downloading audio...")
             audio_path = cls.download_audio(link)
-            
-            cls._update_progress(task_id, 60, "Turning speech into text...")
+            print(f"[PIPELINE] Audio saved to: {audio_path}")
+
+            cls._update_progress(task_id, 60, "Listening through the audio and converting it to text...")
+            print("[PIPELINE] Transcribing with AssemblyAI...")
             transcription = cls.transcribe_audio(audio_path)
             if not transcription:
-                cls._update_progress(task_id, 100, "Transcription failed.", status='FAILED')
+                print("[PIPELINE] ERROR: Transcription failed or empty.")
+                cls._update_progress(task_id, 100, "Couldn't make out the audio. Please try a different video.", status='FAILED')
                 return
 
-            cls._update_progress(task_id, 80, "Structuring article draft...")
+            cls._update_progress(task_id, 80, "Writing up the article based on what was said...")
+            print("[PIPELINE] Synthesizing article with OpenRouter AI...")
             content = cls.synthesize_article(transcription)
             if not content:
-                cls._update_progress(task_id, 100, "AI synthesis failed.", status='FAILED')
+                print("[PIPELINE] ERROR: AI synthesis failed.")
+                cls._update_progress(task_id, 100, "Ran into a problem while writing the article. Try again shortly.", status='FAILED')
                 return
 
-            cls._update_progress(task_id, 95, "Finalizing article...")
+            cls._update_progress(task_id, 95, "Saving your article...")
             blog_post = cls.save_blog_post(user, title, link, content)
-            
-            cls._update_progress(task_id, 100, "Article finalized.", status='COMPLETED', blog_post=blog_post)
+            print(f"[PIPELINE] SUCCESS: Article created (ID: {blog_post.id})")
+
+            cls._update_progress(task_id, 100, "Done! Your article is ready.", status='COMPLETED', blog_post=blog_post)
+            print("[PIPELINE] Task completed successfully.\n")
             return blog_post
 
         except Exception as e:
-            cls._update_progress(task_id, 100, f"Error: {str(e)}", status='FAILED')
+            cls._update_progress(task_id, 100, f"Something went wrong: {str(e)}", status='FAILED')
             raise e
 
     @staticmethod
@@ -87,10 +98,10 @@ class BlogService:
     @staticmethod
     def transcribe_audio(audio_file_path):
         aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
-        config = aai.TranscriptionConfig(speech_models=["universal"])
+        config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.nano)
         transcriber = aai.Transcriber(config=config)
         transcript = transcriber.transcribe(audio_file_path)
-        
+
         if transcript.status == aai.TranscriptStatus.error:
             return None
         return transcript.text
@@ -103,28 +114,30 @@ class BlogService:
             "Content-Type": "application/json",
             "X-Title": "ContentFlow",
         }
-        
-        # Safe truncation
+
+        # Safe truncation to avoid token limits
         transcription = transcription[:4000]
-        
-        prompt = f"""
-        Generate a professional article based on the following transcript.
-        Requirements:
-        - Structured headings (H1, H2, H3)
-        - Professional tone
-        - Concise bullet points
-        - Meta description at end
-        
-        Transcript: {transcription}
-        """
+
+        prompt = f"""Based on the transcript below, write a well-structured, informative article.
+
+Requirements:
+- Use clear headings (H2, H3) to organise the content
+- Write in a professional but approachable tone
+- Include bullet points where appropriate
+- Do NOT mention that this is based on a transcript or video
+- End with a short summary paragraph
+
+Transcript:
+{transcription}
+"""
 
         data = {
-            "model": "openrouter/free",
+            "model": "openrouter/auto",
             "messages": [
-                {"role": "system", "content": "You are a professional content editor."},
+                {"role": "system", "content": "You are an experienced content writer who turns spoken content into clean, readable articles."},
                 {"role": "user", "content": prompt}
             ],
-            "temperature": 0.7,
+            "temperature": 0.65,
             "max_tokens": 2000
         }
 
@@ -132,9 +145,9 @@ class BlogService:
             response = requests.post(url, headers=headers, json=data, timeout=90)
             if response.status_code != 200:
                 return None
-            
+
             content = response.json()["choices"][0]["message"]["content"]
-            # Clean DeepSeek <think> tags if present
+            # Strip any chain-of-thought tags if present
             if "<think>" in content:
                 content = content.split("</think>")[-1].strip()
             return content

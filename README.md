@@ -1,112 +1,111 @@
-# 🌊 ContentFlow
+# 🌊 ContentFlow: Video-to-Editorial AI Suite
 
-> **State-of-the-Art Video Content Automation Suite.**
-> Transform YouTube streams into professional, SEO-optimized editorial articles in real-time.
-
-![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
-![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django&logoColor=white)
+**Live Demo:** [ai-blog-article-generator-1.onrender.com](https://ai-blog-article-generator-1.onrender.com)  
+**Demo Credentials:** `user: demo_admin` | `pass: demo12345`
 
 ---
 
 ## 📖 Overview
+**ContentFlow** is a premium, AI-powered platform designed to transform YouTube video content into professional, well-structured editorial articles. Whether it's a technical tutorial, a live stream, or a quick "Short", ContentFlow extracts the core message and synthesizes it into a high-quality publication ready for blogs or newsletters.
 
-ContentFlow is a high-performance content engine designed to bridge the gap between video media and written editorial content. It automates the complex pipeline of stream extraction, transcription, and contextual synthesis.
-
-### ✨ Key Features
-
-- 🔄 **Real-Time Streaming Pipeline** — Watch the entire process (Download → Transcribe → Synthesize) live in the UI.
-- 📂 **Clean Architecture** — Separated `client/` (Frontend) and `server/` (Backend) structure for better scalability.
-- 🎥 **Video-to-Article** — Batch process YouTube content into polished archives.
-- 💾 **State Persistence** — Supports page reloads without losing your current input or generated results.
-- 🔐 **Hardened Security** — Full CSRF protection, secure authentication, and user-isolated content archives.
-- 🎨 **SaaS Interface** — Professional, minimalist design focused on editorial clarity.
-- 🧩 **Redundant AI Routing** — Automatically falls back to stable models (via OpenRouter).
-
----
-
-## 🏗️ Project Structure
-
-The project follows a decoupled structure to ensure it is **scalable** and easy to maintain:
-
-```text
-AI_blog_app/
-├── client/              # Frontend Assets
-│   ├── static/          # CSS, JS, and global assets
-│   └── templates/       # Django HTML templates
-└── server/              # Backend Logic (Django)
-    ├── ai_blog_app/     # Core project settings
-    ├── blog_generator/  # Application logic & AI pipeline
-    ├── media/           # Local storage for audio extractions
-    ├── manage.py        # Project entry point
-    └── .env             # Sensitive API keys (Secrets)
-```
+### 🌟 Features
+- **🎥 Universal YouTube Support:** Handles standard videos, YouTube Shorts, Live recordings, and mobile links.
+- **⚡ Real-Time Pipeline:** Watch the step-by-step progress as the system extracts audio, transcribes speech, and writes the article.
+- **🎨 Modern SaaS UI:** A sleek, high-performance interface with glassmorphism effects and micro-animations.
+- **🌓 Dual-Theme Engine:** Seamlessly toggle between a "Clean Writing Space" (Light Mode) and a "Deep Focus" (Dark Mode).
+- **💾 Session Persistence:** Never lose your work—LocalDB integration saves your current generation progress across page reloads.
+- **🔐 Secure & Isolated:** User-specific archives ensure your articles are private and protected.
+- **🛠️ Human-Like Feedback:** Background tasks provide natural status updates like *"Listening carefully to what was said..."* instead of technical logs.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-----------|-----------|
-| **Backend** | Django 6.0 (Python) |
-| **Frontend** | Vanilla JavaScript + HTML5 (State Persistence via LocalStorage) |
-| **Logic Engine** | OpenRouter AI (Multi-model Auto-Router) |
-| **Transcription** | AssemblyAI (Neural Speech-to-Text) |
-| **Extraction** | yt-dlp + FFmpeg |
-| **Security** | Django CSRF & Session Auth + Dotenv configuration |
+### Backend (The Engine)
+- **Django 6.0:** The backbone of the application, providing robust routing, security, and user management.
+- **Django-Q:** Handles heavy lifting (AI generation) in background workers to keep the UI snappy.
+- **PostgreSQL (Supabase):** Reliable, cloud-hosted relational database for production data.
+- **yt-dlp & FFmpeg:** Industrial-grade tools for high-speed media extraction and processing.
+
+### AI Intelligence
+- **AssemblyAI (Nano Model):** Cutting-edge Neural Speech-to-Text for ultra-fast and accurate transcription.
+- **OpenRouter AI:** An intelligent gateway that routes content to the best-performing large language models for creative synthesis.
+
+### Frontend (The Experience)
+- **Vanilla CSS3:** Custom Design System built with CSS variables, Flexbox/Grid, and hardware-accelerated animations.
+- **JavaScript (ES6+):** Pure logic for state management, AJAX polling, and real-time DOM updates.
+- **Lucide Icons:** Crisp, consistent iconography across the platform.
 
 ---
 
-## 🚀 Installation & Setup
+## 🏗️ Architecture
+The project is split into a **Decoupled Architecture** to ensure maintainability:
 
-### Prerequisites
+```text
+AI_blog_app/
+├── client/              # Frontend (Design System & Views)
+│   ├── static/          # CSS Design Tokens & Logic Scripts
+│   └── templates/       # Semantic HTML5 Layouts
+└── server/              # Backend (Core AI Pipeline)
+    ├── blog_generator/  # Services, Views, & Task Processing
+    ├── ai_blog_app/     # Deployment & Security Settings
+    └── media/           # Temporary processing buffer
+```
 
+---
+
+## 🚀 Installation
+
+### 1. Prerequisites
 - **Python 3.12+**
-- **FFmpeg** — Required for audio stream processing
-- **API Keys:**
-  - [AssemblyAI](https://www.assemblyai.com/)
-  - [OpenRouter](https://openrouter.ai/)
+- **FFmpeg** (installed on system PATH)
+- API Keys for **AssemblyAI** and **OpenRouter**
 
-### Quick Start
+### 2. Setup
+```bash
+# Clone the repo
+git clone https://github.com/vins254/AI-Blog-Article-Generator.git
+cd AI-Blog-Article-Generator/server
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/vins254/AI-Blog-Article-Generator.git
-   cd AI-Blog-Article-Generator
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-2. **Setup the Server**
-   ```bash
-   cd server
-   pip install -r requirements.txt
-   ```
+# Run migrations
+python manage.py migrate
+```
 
-3. **Configure Environment Variables**
-   
-   Create a `.env` file in the `server/` directory:
-   ```env
-   ASSEMBLYAI_API_KEY=your_assemblyai_key
-   OPENROUTER_API_KEY=your_openrouter_key
-   ```
+### 3. Environment Config
+Create a `.env` file in the `server/` directory:
+```env
+ASSEMBLYAI_API_KEY=your_key
+OPENROUTER_API_KEY=your_key
+DATABASE_URL=your_postgres_url
+DEBUG=True
+```
 
-4. **Initialize Database & Start**
-   ```bash
-   python manage.py migrate
-   python manage.py runserver
-   ```
+### 4. Run
+Start the web server and the background worker (open two terminals):
+```bash
+# Terminal 1: Web Server
+python manage.py runserver
 
-5. **Access the App**
-   Open your browser and navigate to `http://127.0.0.1:8000`.
+# Terminal 2: AI Background Worker
+python manage.py qcluster
+```
 
 ---
 
-## 🔐 Security & Scalability
+## 📸 Screenshots
 
-- **Security**: All API keys are decoupled from the codebase using `.env` files. Authentication is handled by Django's battle-tested auth system, and all stateful requests require CSRF tokens.
-- **Scalability**: The `client/server` split allows you to easily replace the frontend with a modern framework (like React or Next.js) in the future without touching the core AI pipeline.
-- **Persistence**: We use `localStorage` to bridge the gap between page reloads, ensuring the "Article Generator" feels like a robust desktop application.
+| Dashboard (Dark Mode) | Article Pipeline |
+|:---:|:---:|
+| ![Dashboard](https://via.placeholder.com/600x400?text=ContentFlow+Dashboard+Dark) | ![Pipeline](https://via.placeholder.com/600x400?text=Live+Generation+Pipeline) |
+
+| Article View | Archive Grid |
+|:---:|:---:|
+| ![Article](https://via.placeholder.com/600x400?text=Generated+Article+View) | ![Archive](https://via.placeholder.com/600x400?text=My+Articles+Grid) |
 
 ---
 
 ## 👤 Author
-
-Developed by **vins254** — [GitHub](https://github.com/vins254)
+Developed by **vins254** — [GitHub Profile](https://github.com/vins254)
