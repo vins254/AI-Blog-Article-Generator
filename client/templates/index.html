@@ -182,10 +182,15 @@
 
         // ── State Persistence ─────────────────────────────────────────────
         window.addEventListener('DOMContentLoaded', () => {
-            const savedUrl = localStorage.getItem('cf_last_url');
+            // We only restore the generated content, not the input URL
             const savedContent = JSON.parse(localStorage.getItem('cf_last_content') || 'null');
-            if (savedUrl) document.getElementById('youtubeLink').value = savedUrl;
-            if (savedContent) renderArticle(savedContent.title, savedContent.html, savedContent.url);
+            
+            // Explicitly clear the input on reload as requested
+            document.getElementById('youtubeLink').value = '';
+            
+            if (savedContent) {
+                renderArticle(savedContent.title, savedContent.html, savedContent.url);
+            }
         });
 
         // ── Render Article ────────────────────────────────────────────────
@@ -208,7 +213,6 @@
         // ── Input validation feedback ─────────────────────────────────────
         document.getElementById('youtubeLink').addEventListener('input', (e) => {
             const url = e.target.value.trim();
-            localStorage.setItem('cf_last_url', url);
             document.getElementById('inputGroup').style.borderColor =
                 url && !isValidYouTube(url) ? 'var(--danger)' : '';
         });

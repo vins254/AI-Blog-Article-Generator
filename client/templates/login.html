@@ -74,10 +74,14 @@
                 demoBtn.addEventListener('click', () => {
                     document.getElementById('username').value = 'demo_admin';
                     document.getElementById('password').value = 'demo12345';
-                    // Optional: auto-submit
-                    // document.getElementById('loginForm').submit();
                 });
             }
+
+            // Explicitly clear inputs on reload
+            window.addEventListener('pageshow', (event) => {
+                if (event.persisted) window.location.reload(); 
+            });
+            document.querySelectorAll('input').forEach(input => input.value = '');
         })();
     </script>
 </body>
