@@ -78,7 +78,9 @@ class BlogService:
             'skip_download': True, 
             'no_warnings': True,
             'nocheckcertificate': True,
-            'user_agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'referer': 'https://www.google.com/',
+            'extractor_args': {'youtube': {'player_client': ['web_embedded', 'ios']}},
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -92,8 +94,9 @@ class BlogService:
     @staticmethod
     def download_audio(link):
         ydl_opts = {
-            'format': 'bestaudio/best',
+            'format': 'ba/b',
             'outtmpl': os.path.join(settings.MEDIA_ROOT, '%(title)s.%(ext)s'),
+            'noplaylist': True,
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -101,7 +104,9 @@ class BlogService:
             'quiet': True,
             'no_warnings': True,
             'nocheckcertificate': True,
-            'user_agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'referer': 'https://www.google.com/',
+            'extractor_args': {'youtube': {'player_client': ['web_embedded', 'ios']}},
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(link, download=True)
