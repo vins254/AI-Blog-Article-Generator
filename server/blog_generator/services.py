@@ -77,13 +77,15 @@ class BlogService:
             'quiet': True, 
             'skip_download': True, 
             'no_warnings': True,
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'referer': 'https://www.google.com/'
+            'nocheckcertificate': True,
+            'user_agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(link, download=False)
-                return info.get("title", "Untitled Video")
+                if info:
+                    return info.get("title", "Untitled Video")
+                return "Untitled Video"
         except Exception:
             return "Untitled Video"
 
@@ -98,8 +100,8 @@ class BlogService:
             }],
             'quiet': True,
             'no_warnings': True,
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'referer': 'https://www.google.com/'
+            'nocheckcertificate': True,
+            'user_agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(link, download=True)
