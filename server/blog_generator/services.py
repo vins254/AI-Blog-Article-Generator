@@ -92,7 +92,7 @@ class BlogService:
     @staticmethod
     def transcribe_audio(audio_file_path):
         aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
-        config = aai.TranscriptionConfig()
+        config = aai.TranscriptionConfig(speech_models=["universal-3-pro"])
         transcriber = aai.Transcriber(config=config)
         transcript = transcriber.transcribe(audio_file_path)
 
