@@ -186,7 +186,7 @@
             const savedContent = JSON.parse(localStorage.getItem('cf_last_content') || 'null');
             
             // Explicitly clear the input on reload as requested
-            document.getElementById('youtubeLink').value = '';
+            document.querySelectorAll('input:not([type="hidden"])').forEach(input => input.value = '');
             
             if (savedContent) {
                 renderArticle(savedContent.title, savedContent.html, savedContent.url);
