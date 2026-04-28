@@ -80,18 +80,13 @@ class BlogService:
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
             'referer': 'https://www.google.com/',
             'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web_embedded']}},
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-            }],
             'quiet': True,
             'no_warnings': True,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(link, download=True)
             title = info.get("title", "Untitled Video")
-            filename = ydl.prepare_filename(info)
-            audio_path = os.path.splitext(filename)[0] + ".mp3"
+            audio_path = ydl.prepare_filename(info)
             return title, audio_path
 
     @staticmethod
