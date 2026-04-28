@@ -81,7 +81,7 @@
             window.addEventListener('pageshow', (event) => {
                 if (event.persisted) window.location.reload(); 
             });
-            document.querySelectorAll('input').forEach(input => input.value = '');
+            document.querySelectorAll('input:not([type="hidden"])').forEach(input => input.value = '');
         })();
     </script>
 </body>

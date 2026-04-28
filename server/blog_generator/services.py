@@ -50,7 +50,9 @@ def process_video_to_blog_task(user, link, task_id=None):
         return blog_post
 
     except Exception as e:
-        BlogService._update_progress(task_id, 100, f"Something went wrong: {str(e)}", status='FAILED')
+        # defensive truncation to 500 chars just in case, even though we changed model to TextField
+        error_msg = str(e)[:500] 
+        BlogService._update_progress(task_id, 100, f"Something went wrong: {error_msg}", status='FAILED')
         print(f"[PIPELINE] CRITICAL ERROR: {str(e)}")
         raise e
 
@@ -71,7 +73,13 @@ class BlogService:
 
     @staticmethod
     def get_video_title(link):
-        ydl_opts = {'quiet': True, 'skip_download': True, 'no_warnings': True}
+        ydl_opts = {
+            'quiet': True, 
+            'skip_download': True, 
+            'no_warnings': True,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'referer': 'https://www.google.com/'
+        }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(link, download=False)
@@ -90,6 +98,8 @@ class BlogService:
             }],
             'quiet': True,
             'no_warnings': True,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'referer': 'https://www.google.com/'
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(link, download=True)

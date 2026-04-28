@@ -89,7 +89,7 @@ class TaskProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     task_id = models.CharField(max_length=255, unique=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PENDING')
-    message = models.CharField(max_length=255, blank=True)
+    message = models.TextField(blank=True)
     progress = models.IntegerField(default=0) # 0 to 100
     blog_post = models.ForeignKey(BlogPost, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
