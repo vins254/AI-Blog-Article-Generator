@@ -22,11 +22,21 @@ AUTHORS: ContentFlow Development Team
             ContentFlow<span class="brand-dot">.</span>
         </div>
         <div class="navbar-links">
-            <a href="/blog-list" class="btn-nav">Archive</a>
-            <a href="/" class="btn-nav">New Article</a>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                <i data-lucide="sun" class="sun-icon"></i>
-                <i data-lucide="moon" class="moon-icon"></i>
+            <div class="nav-menu" id="navMenu">
+                <div class="user-profile">
+                    <i data-lucide="user"></i>
+                    <span>{{ user.username }}</span>
+                </div>
+                <a href="/blog-list" class="btn-nav">Archive</a>
+                <a href="/" class="btn-nav">New Article</a>
+                <a href="/logout" class="btn-nav">Logout</a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                </button>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i data-lucide="menu"></i>
             </button>
         </div>
     </nav>
@@ -63,15 +73,24 @@ AUTHORS: ContentFlow Development Team
         lucide.createIcons();
         (function() {
             const themeToggle = document.getElementById('themeToggle');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const navMenu = document.getElementById('navMenu');
             const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            html.setAttribute('data-theme', savedTheme);
+            
+            html.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
             
             themeToggle.addEventListener('click', () => {
-                const currentTheme = html.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                html.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
+                const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+            });
+
+            mobileMenuBtn.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+                const icon = mobileMenuBtn.querySelector('i');
+                const isOpened = navMenu.classList.contains('active');
+                icon.setAttribute('data-lucide', isOpened ? 'x' : 'menu');
+                lucide.createIcons();
             });
         })();
 

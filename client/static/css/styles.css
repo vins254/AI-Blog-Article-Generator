@@ -148,7 +148,67 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .navbar-links {
     display: flex;
     align-items: center;
+    gap: 1.5rem;
+}
+
+/* --- USER PROFILE --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+.user-profile:hover { border-color: var(--accent); background: var(--accent-soft); }
+.user-profile i { width: 16px; height: 16px; color: var(--accent); }
+
+/* --- MOBILE MENU --- */
+.mobile-menu-btn {
+    display: none;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
     gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu-btn { display: flex; }
+    .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-surface);
+        flex-direction: column;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        animation: fadeSlideDown 0.3s ease;
+        z-index: 100;
+    }
+    .nav-menu.active { display: flex; }
+    .user-profile { width: 100%; justify-content: center; order: -1; }
+    .btn-nav { width: 100%; text-align: center; padding: 0.8rem; }
+}
+
+@keyframes fadeSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .btn-nav {
@@ -557,6 +617,17 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.btn-delete {
+    color: var(--text-muted);
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+.btn-delete:hover {
+    color: var(--danger);
+    background: rgba(220, 38, 38, 0.1);
 }
 
 /* --- ANIMATIONS --- */
