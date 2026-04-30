@@ -12,7 +12,15 @@ The application uses an automated asynchronous pipeline to process video content
 1.  **Extraction**: The system uses `yt-dlp` to extract the audio stream from a YouTube URL.
 2.  **Transcription**: The audio is sent to **AssemblyAI (Universal-3-Pro)**, which converts the speech into highly accurate text, identifying speakers and timestamps.
 3.  **Synthesis**: The raw transcript is sent to an LLM via **OpenRouter**. The AI is instructed to remove verbal fillers, structure the content with meaningful headings, and write in a professional editorial tone.
-4.  **Finalization**: The article is saved to the database and presented to the user with reading time estimates and meta-data.
+4.  **Publication**: The final article is rendered in a beautiful, reader-friendly format and saved to your personal editorial archive.
+5.  **Management**: Users can delete unwanted articles directly from the archive grid to keep their history clean.
+
+## 3. Key Features
+- **Asynchronous Generation**: Processing happens in the background, allowing users to navigate away or start new tasks.
+- **Dynamic Theming**: Support for sleek Dark and Light modes.
+- **Full Responsiveness**: A mobile-first design with a dedicated slide-out menu for small screens.
+- **Article Archive**: A central grid to view, read, and manage previously generated content.
+- **Security**: Account-based isolation ensuring users only see their own articles.
 
 ---
 

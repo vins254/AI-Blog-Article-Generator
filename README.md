@@ -23,14 +23,21 @@ The application follows a 4-stage automated pipeline:
 
 ### Backend
 - **Framework**: Django (Python 3.12+)
-- **Task Management**: Django-Q (Handles the generation pipeline in the background)
-- **Database**: PostgreSQL (Production) / SQLite (Development)
-- **Static Serving**: WhiteNoise with Cache Busting
+- **Database**: PostgreSQL (Supabase)
+- **Async Tasks**: Django-Q2 (ORM Broker)
+- **Transcription**: AssemblyAI (Universal-3-Pro)
+- **Synthesis**: OpenRouter (AI Editorial Engine)
 
-### Content Engine
-- **Speech-to-Text**: AssemblyAI (Universal-3-Pro model)
-- **LLM Orchestration**: OpenRouter (AI Synthesis)
-- **Media Engine**: yt-dlp & FFmpeg
+## Screenshots
+
+### Dashboard (Dark Mode)
+![Dashboard Dark](Screenshots/dashboard_dark.png)
+
+### Dashboard (Light Mode)
+![Dashboard Light](Screenshots/dashboard_light.png)
+
+### Article Archive
+![Article Archive](Screenshots/Articles.png)
 
 ### Frontend
 - **Design**: Custom Vanilla CSS (Design System)
