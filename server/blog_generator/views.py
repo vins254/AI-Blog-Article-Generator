@@ -108,7 +108,7 @@ def task_status(request, task_id):
 def blog_list(request):
     """Retrieves all historical articles for the current user."""
     articles = BlogPost.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, "all-blogs.html", {'blog_articles': articles})
+    return render(request, "all-blogs.html", {'all_blog_articles': articles})
 
 
 @login_required
