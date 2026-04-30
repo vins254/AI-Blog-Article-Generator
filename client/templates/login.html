@@ -1,0 +1,82 @@
+{% load static %}
+<!--
+-----------------------------------------------------------------------------
+FILE: client/templates/login.html
+PURPOSE: User authentication gateway.
+AUTHORS: ContentFlow Development Team
+-----------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — ContentFlow</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=1.0.1">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <main class="auth-container">
+            <header class="section-header">
+                <div class="brand" style="justify-content: center; margin-bottom: 2rem;">
+                    <i data-lucide="layers" class="accent-text"></i>
+                    ContentFlow<span class="brand-dot">.</span>
+                </div>
+                <h1>Welcome Back</h1>
+                <p class="text-secondary">Sign in to manage your editorial pipeline.</p>
+            </header>
+
+            {% if error_message %}
+            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none; border-radius: var(--radius-md);">
+                {{ error_message }}
+            </div>
+            {% endif %}
+
+            {% if form.errors %}
+            <div class="badge" style="display: block; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem; margin-bottom: 1.5rem; text-align: center; text-transform: none; border-radius: var(--radius-md);">
+                {% for field in form %}
+                    {% for error in field.errors %}{{ error }}{% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="POST" class="auth-form" id="loginForm">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                </div>
+                <div class="form-field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+                <button type="submit">Sign In</button>
+            </form>
+
+
+
+            <footer style="margin-top: 2rem; text-align: center; font-size: 0.95rem;">
+                <span class="text-secondary">New here?</span> 
+                <a href="/signup" class="accent-text" style="font-weight: 600; margin-left: 0.5rem;">Create an account</a>
+            </footer>
+        </main>
+    </div>
+    <script>
+        lucide.createIcons();
+        (function() {
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-theme', savedTheme);
+
+
+
+            // Explicitly clear inputs on reload
+            window.addEventListener('pageshow', (event) => {
+                if (event.persisted) window.location.reload(); 
+            });
+            document.querySelectorAll('input:not([type="hidden"])').forEach(input => input.value = '');
+        })();
+    </script>
+</body>
+</html>

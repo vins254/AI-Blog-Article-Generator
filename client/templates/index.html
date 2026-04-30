@@ -1,0 +1,332 @@
+{% load static %}
+<!--
+-----------------------------------------------------------------------------
+FILE: client/templates/index.html
+PURPOSE: Main dashboard for YouTube to Article generation.
+AUTHORS: ContentFlow Development Team
+-----------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Turn any YouTube video into a well-structured written article in minutes.">
+    <title>ContentFlow — YouTube to Article</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=1.0.1">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">
+            <i data-lucide="layers" class="accent-text"></i>
+            ContentFlow<span class="brand-dot">.</span>
+        </div>
+        <div class="navbar-links">
+            <a href="/blog-list" class="btn-nav">My Articles</a>
+            <a href="/logout" class="btn-nav">Logout</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <i data-lucide="sun" class="sun-icon"></i>
+                <i data-lucide="moon" class="moon-icon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <main class="dashboard">
+
+            <!-- ── HERO INPUT ── -->
+            <section class="input-section">
+                <header class="section-header">
+                    <h1>Turn any YouTube video into an article</h1>
+                    <p class="text-secondary">Paste the link below. We'll handle the rest — no editing needed.</p>
+                </header>
+
+                <div class="input-group" id="inputGroup">
+                    <input type="url" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+                    <button id="generateBlogButton">Generate</button>
+                </div>
+                <p class="input-hint text-secondary">Supports standard links, YouTube Shorts, and live recordings.</p>
+            </section>
+
+            <!-- ── PROGRESS STEPS ── -->
+            <section id="pipeline-ui" class="pipeline-container">
+                <p class="pipeline-heading">Working on your article&hellip;</p>
+                <div class="progress-bar">
+                    <div id="progress-inner" class="progress-inner"></div>
+                </div>
+                <div class="pipeline-steps">
+                    <div class="pipeline-step" id="step-1">
+                        <div class="step-marker">
+                            <i data-lucide="search" style="width:20px;height:20px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Reading the link</span>
+                            <span class="step-sub" id="sub-1">Finding the video&hellip;</span>
+                        </div>
+                    </div>
+                    <div class="pipeline-step" id="step-2">
+                        <div class="step-marker">
+                            <i data-lucide="download" style="width:20px;height:20px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Grabbing the audio</span>
+                            <span class="step-sub" id="sub-2">Downloading the track&hellip;</span>
+                        </div>
+                    </div>
+                    <div class="pipeline-step" id="step-3">
+                        <div class="step-marker">
+                            <i data-lucide="mic" style="width:20px;height:20px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Listening carefully</span>
+                            <span class="step-sub" id="sub-3">Converting speech to text&hellip;</span>
+                        </div>
+                    </div>
+                    <div class="pipeline-step" id="step-4">
+                        <div class="step-marker">
+                            <i data-lucide="pen-line" style="width:20px;height:20px;"></i>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">Writing the article</span>
+                            <span class="step-sub" id="sub-4">Putting it all together&hellip;</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── ARTICLE OUTPUT ── -->
+            <section id="blogOutput" class="blog-output-section" style="display: none;">
+                <div class="article-header">
+                    <div class="article-meta">
+                        <span id="article-date"></span>
+                        <span class="dot">·</span>
+                        <span id="read-time"></span>
+                        <span class="dot">·</span>
+                        <a id="video-source" href="#" target="_blank" class="accent-text">Watch original</a>
+                    </div>
+                    <h1 id="article-title"></h1>
+                </div>
+                <div id="blogContent" class="article-body"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Theme Engine --------------------------------------------------
+        (function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            html.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+            themeToggle.addEventListener('click', () => {
+                const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+            });
+        })();
+
+        // --- YouTube URL Validation ----------------------------------------
+        function isValidYouTube(url) {
+            const re = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|shorts\/|live\/)?([a-zA-Z0-9_-]{11})(\S*)?$/;
+            return re.test(url.trim());
+        }
+
+        // --- CSRF helper ---------------------------------------------------
+        function getCsrf() {
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        // --- Pipeline UI ---------------------------------------------------
+        const stepMessages = {
+            1: ["Finding the video...", "Checking the link...", "Got it, loading video info..."],
+            2: ["Grabbing the audio track...", "Downloading...", "Almost done downloading..."],
+            3: ["Listening to what was said...", "Converting speech to text...", "Reading through the words..."],
+            4: ["Putting the article together...", "Writing things out...", "Adding the finishing touches..."]
+        };
+
+        function updatePipeline(step) {
+            document.getElementById('pipeline-ui').classList.add('active');
+            const progressMap = { 1: 18, 2: 42, 3: 68, 4: 90, 5: 100 };
+            document.getElementById('progress-inner').style.width = `${progressMap[step] || step * 20}%`;
+
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`step-${i}`);
+                const sub = document.getElementById(`sub-${i}`);
+                
+                if (i < step) {
+                    // Stage Complete
+                    el.classList.add('active', 'done');
+                    if (el._msgTimer) {
+                        clearInterval(el._msgTimer);
+                        el._msgTimer = null;
+                    }
+                    if (sub) sub.textContent = "Done!";
+                } else if (i === step) {
+                    // Stage Active
+                    if (!el.classList.contains('active') || el.classList.contains('done')) {
+                        el.classList.add('active');
+                        el.classList.remove('done');
+                        
+                        const msgs = stepMessages[i];
+                        if (sub && msgs) {
+                            let idx = 0;
+                            clearInterval(el._msgTimer);
+                            sub.textContent = msgs[0];
+                            el._msgTimer = setInterval(() => {
+                                idx = (idx + 1) % msgs.length;
+                                sub.textContent = msgs[idx];
+                            }, 3000);
+                        }
+                    }
+                } else {
+                    // Stage Pending
+                    el.classList.remove('active', 'done');
+                    if (el._msgTimer) {
+                        clearInterval(el._msgTimer);
+                        el._msgTimer = null;
+                    }
+                }
+            }
+        }
+
+        function resetPipeline() {
+            document.getElementById('pipeline-ui').classList.remove('active');
+            document.getElementById('progress-inner').style.width = '0%';
+            document.querySelectorAll('.pipeline-step').forEach(el => {
+                el.classList.remove('active', 'done');
+                clearInterval(el._msgTimer);
+            });
+        }
+
+        // --- State Persistence ---------------------------------------------
+        window.addEventListener('DOMContentLoaded', () => {
+            // Explicitly clear all inputs on reload to ensure a fresh start
+            document.querySelectorAll('input:not([type="hidden"])').forEach(input => input.value = '');
+            
+            // We no longer restore the generated content on return,
+            // as per user request to have a clean slate when returning to dashboard.
+            localStorage.removeItem('cf_last_content');
+        });
+
+        // --- Render Article ------------------------------------------------
+        function renderArticle(title, html, url) {
+            document.getElementById('article-title').textContent = title;
+            document.getElementById('blogContent').innerHTML = html.replace(/\n\n/g, '<br><br>');
+            document.getElementById('article-date').textContent = new Date().toLocaleDateString('en-US', {
+                month: 'long', day: 'numeric', year: 'numeric'
+            });
+            document.getElementById('video-source').href = url;
+
+            const words = document.getElementById('blogContent').innerText.split(/\s+/).length;
+            document.getElementById('read-time').textContent = `${Math.max(1, Math.ceil(words / 200))} min read`;
+
+            const output = document.getElementById('blogOutput');
+            output.style.display = 'block';
+            output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // --- Input validation feedback -------------------------------------
+        document.getElementById('youtubeLink').addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            document.getElementById('inputGroup').style.borderColor =
+                url && !isValidYouTube(url) ? 'var(--danger)' : '';
+        });
+
+        // --- Generate ------------------------------------------------------
+        document.getElementById('generateBlogButton').addEventListener('click', async () => {
+            const url = document.getElementById('youtubeLink').value.trim();
+            const btn = document.getElementById('generateBlogButton');
+
+            if (!url) {
+                document.getElementById('youtubeLink').focus();
+                return;
+            }
+            if (!isValidYouTube(url)) {
+                document.getElementById('inputGroup').style.borderColor = 'var(--danger)';
+                alert("Please paste a valid YouTube link (e.g. youtube.com/watch?v=... or youtu.be/...)");
+                return;
+            }
+
+            // Reset UI
+            btn.disabled = true;
+            btn.textContent = "Working...";
+            document.getElementById('blogOutput').style.display = 'none';
+            document.getElementById('inputGroup').style.borderColor = '';
+            resetPipeline();
+
+            try {
+                // Step 1 — kick off the task
+                updatePipeline(1);
+                const res = await fetch('/generate-blog', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrf()
+                    },
+                    body: JSON.stringify({ link: url })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Something went wrong. Please try again.');
+                }
+
+                const { task_id } = await res.json();
+
+                // Poll every 2.5 s
+                const poll = setInterval(async () => {
+                    try {
+                        const sr = await fetch(`/task-status/${task_id}/`);
+                        if (!sr.ok) return;
+                        const d = await sr.json();
+
+                        // Map progress % to step number
+                        let step = 1;
+                        if (d.progress >= 30) step = 2;
+                        if (d.progress >= 60) step = 3;
+                        if (d.progress >= 80) step = 4;
+                        updatePipeline(step);
+
+                        if (d.status === 'COMPLETED') {
+                            clearInterval(poll);
+                            // Clear running message timers
+                            document.querySelectorAll('.pipeline-step').forEach(el => clearInterval(el._msgTimer));
+                            document.getElementById('progress-inner').style.width = '100%';
+
+                            setTimeout(() => {
+                                resetPipeline();
+                                renderArticle(d.title, d.content, url);
+                                
+                                // Clear input for next use
+                                document.getElementById('youtubeLink').value = '';
+                                
+                                btn.disabled = false;
+                                btn.textContent = "Generate";
+                            }, 600);
+
+                        } else if (d.status === 'FAILED') {
+                            clearInterval(poll);
+                            resetPipeline();
+                            alert(`Something went wrong: ${d.message || 'Please try again.'}`);
+                            btn.disabled = false;
+                            btn.textContent = "Generate";
+                        }
+                    } catch (_) {
+                        // network blip — keep polling
+                    }
+                }, 2500);
+
+            } catch (err) {
+                resetPipeline();
+                alert(err.message);
+                btn.disabled = false;
+                btn.textContent = "Generate";
+            }
+        });
+    </script>
+</body>
+</html>

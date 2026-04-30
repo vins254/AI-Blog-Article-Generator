@@ -1,0 +1,91 @@
+{% load static %}
+<!--
+-----------------------------------------------------------------------------
+FILE: client/templates/all-blogs.html
+PURPOSE: Article archive / grid view for processed publications.
+AUTHORS: ContentFlow Development Team
+-----------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive — ContentFlow</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=1.0.1">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">
+            <i data-lucide="layers" class="accent-text"></i>
+            ContentFlow<span class="brand-dot">.</span>
+        </div>
+        <div class="navbar-links">
+            <a href="/" class="btn-nav">New Article</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <i data-lucide="sun" class="sun-icon"></i>
+                <i data-lucide="moon" class="moon-icon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <main class="dashboard">
+            <section class="archive-section">
+                <header class="section-header" style="text-align: left; margin-bottom: 3.5rem;">
+                    <div class="badge">Archives</div>
+                    <h1>Your Publication History</h1>
+                    <p class="text-secondary">All articles synthesized from video content, preserved here.</p>
+                </header>
+
+                <div class="archive-grid">
+                    {% for blog in all_blog_articles %}
+                    <article class="card">
+                        <div class="card-meta" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                            {{ blog.created_at|date:"M d, Y" }}
+                        </div>
+                        <h2 class="archive-title">
+                            <a href="/blog-details/{{ blog.id }}">{{ blog.youtube_title }}</a>
+                        </h2>
+                        <div class="archive-preview">
+                            {{ blog.generated_content }}
+                        </div>
+                        <div class="archive-actions">
+                            <a href="/blog-details/{{ blog.id }}" class="btn-text">
+                                Read Full Article 
+                                <i data-lucide="arrow-right" style="width:14px; height:14px;"></i>
+                            </a>
+                        </div>
+                    </article>
+                    {% empty %}
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; background: var(--bg-surface); border-radius: var(--radius-lg); border: 1.5px dashed var(--border);">
+                        <i data-lucide="inbox" style="width:48px; height:48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <h3 class="text-secondary">No articles yet</h3>
+                        <p class="text-muted" style="margin-top: 0.5rem;">When you generate your first article, it will appear here.</p>
+                        <a href="/" class="accent-text" style="display: inline-block; margin-top: 1.5rem;">Create your first article</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        (function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-theme', savedTheme);
+            
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        })();
+    </script>
+</body>
+</html>
