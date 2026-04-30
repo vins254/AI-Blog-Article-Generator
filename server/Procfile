@@ -1,1 +1,1 @@
-web: python manage.py qcluster & gunicorn ai_blog_app.wsgi:application --bind 0.0.0.0:$PORT
+web: gunicorn ai_blog_app.wsgi:application --bind 0.0.0.0:$PORT & python manage.py qcluster
